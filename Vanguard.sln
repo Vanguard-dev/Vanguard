@@ -3,9 +3,33 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27705.2000
 MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{713D534D-7CD3-401F-AB3E-770118A67FF2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.Windows.InstanceManager", "src\Vanguard.Windows.InstanceManager\Vanguard.Windows.InstanceManager.csproj", "{FBFFDC70-E520-4676-8784-5A226CAD8CC9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.Daemon.Abstractions", "src\Vanguard.Daemon.Abstractions\Vanguard.Daemon.Abstractions.csproj", "{EEFE6634-4314-4588-9039-9AF87A9E7FD3}"
+EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBFFDC70-E520-4676-8784-5A226CAD8CC9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBFFDC70-E520-4676-8784-5A226CAD8CC9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBFFDC70-E520-4676-8784-5A226CAD8CC9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBFFDC70-E520-4676-8784-5A226CAD8CC9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EEFE6634-4314-4588-9039-9AF87A9E7FD3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EEFE6634-4314-4588-9039-9AF87A9E7FD3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EEFE6634-4314-4588-9039-9AF87A9E7FD3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EEFE6634-4314-4588-9039-9AF87A9E7FD3}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{FBFFDC70-E520-4676-8784-5A226CAD8CC9} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
+		{EEFE6634-4314-4588-9039-9AF87A9E7FD3} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15CBC869-B055-4E6B-A5DC-5291CE178490}
