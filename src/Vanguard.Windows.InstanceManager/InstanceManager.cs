@@ -35,8 +35,8 @@ namespace Vanguard.Windows.InstanceManager
                 var serviceDefinition = new ServiceDefinition();
                 _configuration.GetSection("Services").Bind(entry.Key, serviceDefinition);
                 var host = new ServiceHost(serviceName, serviceDefinition, _loggerFactory);
-                host.Start();
                 serviceHosts.Add(host);
+                host.Start();
             }
 
             // TODO: API for interacting with the hosted services
