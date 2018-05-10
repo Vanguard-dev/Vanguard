@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -8,11 +9,13 @@ namespace Vanguard.Windows.InstanceManager
 {
     public class InstanceManager : IDaemon
     {
+        private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
         private readonly IConfiguration _configuration;
 
         public InstanceManager(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
+            _loggerFactory = loggerFactory;
             _logger = loggerFactory.CreateLogger<InstanceManager>();
             _configuration = configuration;
         }
@@ -24,11 +27,30 @@ namespace Vanguard.Windows.InstanceManager
 
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            for (uint i = 0; i >= 0; i++)
+            var serviceHosts = new List<ServiceHost>();
+            var servicesToHost = _configuration.GetSection("Services").GetChildren();
+            foreach (var entry in servicesToHost)
             {
-                _logger.LogDebug("Cycle start bitches!");
+                var serviceName = entry.Key;
+                var serviceDefinition = new ServiceDefinition();
+                _configuration.GetSection("Services").Bind(entry.Key, serviceDefinition);
+                var host = new ServiceHost(serviceName, serviceDefinition, _loggerFactory);
+                host.Start();
+                serviceHosts.Add(host);
+            }
+
+            // TODO: API for interacting with the hosted services
+            // TODO: Per host logging for debugging and health checks
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // TODO: Implement scheduled actions for hosted services
                 await Task.Delay(1000, cancellationToken);
-                _logger.LogTrace("Cycle done bitches!");
+            }
+
+            foreach (var host in serviceHosts)
+            {
+                host.Kill();
             }
         }
     }

@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Vanguard.Bot.Discord\Vanguard.Bot.Discord.csproj" />
     <ProjectReference Include="..\Vanguard.Daemon.Abstractions\Vanguard.Daemon.Abstractions.csproj" />
   </ItemGroup>
 
