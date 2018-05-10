@@ -7,6 +7,7 @@ namespace Vanguard.Windows.InstanceManager
 {
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             if (args.Any(t => t == "--foreground") || args.Any(t => t == "-f"))

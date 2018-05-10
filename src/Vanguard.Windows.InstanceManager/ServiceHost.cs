@@ -21,18 +21,24 @@ namespace Vanguard.Windows.InstanceManager
 
         public void Start()
         {
-            var startInfo = new ProcessStartInfo(Path.Combine(ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable), ServiceDefinition.Arguments)
+            var credentials = GetCredentials();
+            _process = ProcessLauncher.RunProcess("", ServiceDefinition.UserName, ServiceDefinition.Password, ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable, ServiceDefinition.Arguments);
+            
+            
+            /*var startInfo = new ProcessStartInfo(Path.Combine(ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable), ServiceDefinition.Arguments)
             {
-                RedirectStandardInput = false,
-                RedirectStandardOutput = false,
-                RedirectStandardError = false,
-                CreateNoWindow = true,
-                UserName = GetServiceUserName(),
-                LoadUserProfile = true,
                 WorkingDirectory = ServiceDefinition.WorkingDirectory,
-                UseShellExecute = false,
+                RedirectStandardInput = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UserName = credentials.Item1,
+                PasswordInClearText = credentials.Item2,
+                LoadUserProfile = true,
+                CreateNoWindow = true,
+                WindowStyle = ProcessWindowStyle.Hidden,
+                UseShellExecute = true
             };
-            _process = Process.Start(startInfo);
+            _process = Process.Start(startInfo);*/
         }
 
         public void Kill()
@@ -43,9 +49,11 @@ namespace Vanguard.Windows.InstanceManager
             }
         }
 
-        private string GetServiceUserName()
+        private Tuple<string, string> GetCredentials()
         {
-            return "Administrator";
+            // TODO: Ensure exists
+            // TODO: Ensure password is correct
+            return new Tuple<string, string>(ServiceDefinition.UserName, ServiceDefinition.Password);
         }
 
         public void Dispose()
