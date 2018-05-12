@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json.Serialization;
 using Vanguard.Data;
 using Vanguard.Data.Entities;
 using Vanguard.Web.Services;
@@ -74,7 +75,12 @@ namespace Vanguard.Web
             services.AddTransient<IEmailSender, EmailSender>();
 
             // Add MVC services
-            services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            services.AddMvc()
+                .SetCompatibilityVersion(CompatibilityVersion.Version_2_1)
+                .AddJsonOptions(options =>
+                {
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                });
 
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>

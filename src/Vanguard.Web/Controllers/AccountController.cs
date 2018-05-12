@@ -21,10 +21,10 @@ namespace Vanguard.Web.Controllers
             _signInManager = signInManager;
         }
 
-        [HttpPost]
+        [HttpPost("register")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Register(RegisterViewModel model)
+        public async Task<IActionResult> Register([FromBody] RegisterViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -48,10 +48,10 @@ namespace Vanguard.Web.Controllers
             return BadRequest(ModelState);
         }
 
-        [HttpPost]
+        [HttpPost("login")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model)
+        public async Task<IActionResult> Login([FromBody] LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
