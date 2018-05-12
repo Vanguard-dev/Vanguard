@@ -67,6 +67,14 @@ namespace Vanguard.Web
                         ? new AngularCliBuilder(npmScript: "build:ssr")
                         : null;
                     options.ExcludeUrls = new[] { "/sockjs-node" };
+                    options.SupplyData = (context, data) =>
+                    {
+                        // TODO: Supply session to app here
+                        data["session"] = new
+                        {
+                            UserName = "test"
+                        };
+                    };
                 });
 
                 if (env.IsDevelopment())

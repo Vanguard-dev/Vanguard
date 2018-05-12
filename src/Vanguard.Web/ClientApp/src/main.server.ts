@@ -5,12 +5,16 @@ import { APP_BASE_HREF } from '@angular/common';
 import { enableProdMode } from '@angular/core';
 import { provideModuleMap } from '@nguniversal/module-map-ngfactory-loader';
 import { createServerRenderer } from 'aspnet-prerendering';
+import { setSession } from './app/identity/helpers';
 export { AppServerModule } from './app/app.server.module';
 
 enableProdMode();
 
 export default createServerRenderer(params => {
   const { AppServerModule, AppServerModuleNgFactory, LAZY_MODULE_MAP } = (module as any).exports;
+
+  // Set session for session service
+  setSession(params.data.session);
 
   const options = {
     document: params.data.originalHtml,
