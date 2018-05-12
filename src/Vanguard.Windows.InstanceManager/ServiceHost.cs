@@ -21,24 +21,17 @@ namespace Vanguard.Windows.InstanceManager
 
         public void Start()
         {
-            var credentials = GetCredentials();
-            _process = ProcessLauncher.RunProcess("", ServiceDefinition.UserName, ServiceDefinition.Password, ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable, ServiceDefinition.Arguments);
-            
-            
-            /*var startInfo = new ProcessStartInfo(Path.Combine(ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable), ServiceDefinition.Arguments)
+            var startInfo = new ProcessStartInfo(Path.Combine(ServiceDefinition.WorkingDirectory, ServiceDefinition.Executable), ServiceDefinition.Arguments)
             {
                 WorkingDirectory = ServiceDefinition.WorkingDirectory,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
-                UserName = credentials.Item1,
-                PasswordInClearText = credentials.Item2,
-                LoadUserProfile = true,
                 CreateNoWindow = true,
                 WindowStyle = ProcessWindowStyle.Hidden,
-                UseShellExecute = true
+                UseShellExecute = false
             };
-            _process = Process.Start(startInfo);*/
+            _process = Process.Start(startInfo);
         }
 
         public void Kill()

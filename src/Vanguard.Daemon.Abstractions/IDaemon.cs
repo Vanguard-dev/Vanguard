@@ -1,7 +1,11 @@
-﻿namespace Vanguard.Daemon.Abstractions
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace Vanguard.Daemon.Abstractions
 {
     public interface IDaemon
     {
-        void Run();
+        Task RunAsync(CancellationToken cancellationToken = default);
+        void Kill();
     }
 }

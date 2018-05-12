@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Vanguard.Windows.ServiceWrapper": {
+      "commandName": "Project",
+      "commandLineArgs": "-f",
+      "environmentVariables": {
+        "VANGUARD_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

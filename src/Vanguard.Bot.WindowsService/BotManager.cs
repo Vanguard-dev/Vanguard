@@ -23,6 +23,16 @@ namespace Vanguard.Bot.WindowsService
             RunAsync(new CancellationToken()).GetAwaiter().GetResult();
         }
 
+        public void RunInBackground()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Kill()
+        {
+            throw new NotImplementedException();
+        }
+
         private async Task RunAsync(CancellationToken cancellationToken)
         {
             // TODO: Start and run bots here

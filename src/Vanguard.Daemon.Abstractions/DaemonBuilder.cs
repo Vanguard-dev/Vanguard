@@ -10,12 +10,11 @@ namespace Vanguard.Daemon.Abstractions
     {
         private readonly ServiceCollection _serviceCollection;
         private readonly IConfigurationRoot _configuration;
-        private IServiceScope _scope;
         private IStartup _startup;
 
         public DaemonBuilder(string[] args)
         {
-            var environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT");
+            var environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? "Production";
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile($"appsettings.{environmentName}.json", true, true)
@@ -68,7 +67,7 @@ namespace Vanguard.Daemon.Abstractions
             }
 
             var services = _serviceCollection.BuildServiceProvider();
-            _startup.ConfigureApp(services, _configuration);
+            _startup?.ConfigureApp(services, _configuration);
             return services.GetRequiredService<IDaemon>();
         }
     }
