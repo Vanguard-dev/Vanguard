@@ -6,11 +6,24 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Vanguard.Bot.Discord.csproj.DotSettings" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Discord.Net" Version="2.0.0-beta" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Vanguard.Bot.Abstractions\Vanguard.Bot.Abstractions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.Configuration.Abstractions">
+      <HintPath>C:\Users\Muta\.nuget\packages\microsoft.extensions.configuration.abstractions\2.1.0-rc1-final\lib\netstandard2.0\Microsoft.Extensions.Configuration.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+      <HintPath>C:\Users\Muta\.nuget\packages\microsoft.extensions.logging.abstractions\2.1.0-rc1-final\lib\netstandard2.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

@@ -54,7 +54,7 @@ namespace Vanguard.Windows.ServiceWrapper
 
         public void Stop()
         {
-            _process?.Close();
+            _process?.CloseMainWindow();
             if (IsRunning)
             {
                 _process?.WaitForExit(2500);

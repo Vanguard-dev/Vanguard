@@ -30,7 +30,13 @@ namespace Vanguard.Windows.ServiceWrapper
             while (!cancellationToken.IsCancellationRequested && _host.IsRunning)
             {
                 // TODO: Implement scheduled actions for hosted services
-                await Task.Delay(1000, cancellationToken);
+                try
+                {
+                    await Task.Delay(1000, cancellationToken);
+                }
+                catch (TaskCanceledException)
+                {
+                }
             }
 
             _host.Stop();
