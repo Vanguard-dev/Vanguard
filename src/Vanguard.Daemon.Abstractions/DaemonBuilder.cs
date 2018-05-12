@@ -14,7 +14,8 @@ namespace Vanguard.Daemon.Abstractions
 
         public DaemonBuilder(string[] args)
         {
-            var environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? "Production";
+            var environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? args.FirstOrDefault(t => t.StartsWith("/Environment:"))?.Split(':').Last() ?? "Production";
+            Console.WriteLine("Starting in {0} environment", environmentName);
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
                 .AddJsonFile($"appsettings.{environmentName}.json", true, true)
