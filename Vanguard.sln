@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.Windows.ServiceWra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.Bot.Abstractions", "src\Vanguard.Bot.Abstractions\Vanguard.Bot.Abstractions.csproj", "{876E18CF-FB10-49CE-B412-02A00FE40B7F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.Web", "src\Vanguard.Web\Vanguard.Web.csproj", "{CFD56927-D512-46EB-93BE-1F3DB2951025}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,10 @@ Global
 		{876E18CF-FB10-49CE-B412-02A00FE40B7F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{876E18CF-FB10-49CE-B412-02A00FE40B7F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{876E18CF-FB10-49CE-B412-02A00FE40B7F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFD56927-D512-46EB-93BE-1F3DB2951025}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFD56927-D512-46EB-93BE-1F3DB2951025}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFD56927-D512-46EB-93BE-1F3DB2951025}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFD56927-D512-46EB-93BE-1F3DB2951025}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -51,6 +57,7 @@ Global
 		{C22A431E-1BC8-4E5B-A0F0-C7D5272B44AD} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 		{3A3903DE-CC08-413B-804F-33083C32C918} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 		{876E18CF-FB10-49CE-B412-02A00FE40B7F} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
+		{CFD56927-D512-46EB-93BE-1F3DB2951025} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15CBC869-B055-4E6B-A5DC-5291CE178490}
