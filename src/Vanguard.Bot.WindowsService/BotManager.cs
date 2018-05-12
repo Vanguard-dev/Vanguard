@@ -18,24 +18,15 @@ namespace Vanguard.Bot.WindowsService
             _configuration = configuration;
         }
 
-        public void Run()
+        public Task RunAsync(CancellationToken cancellationToken = default)
         {
-            RunAsync(new CancellationToken()).GetAwaiter().GetResult();
-        }
-
-        public void RunInBackground()
-        {
+            // TODO: Implement a bot manager logic here. The manager should start the bots and monitor their health.
             throw new NotImplementedException();
         }
 
         public void Kill()
         {
-            throw new NotImplementedException();
-        }
-
-        private async Task RunAsync(CancellationToken cancellationToken)
-        {
-            // TODO: Start and run bots here
+            // TODO: This is used to forcefully kill the daemon. Kill and dispose all the required bots here.
             throw new NotImplementedException();
         }
     }
