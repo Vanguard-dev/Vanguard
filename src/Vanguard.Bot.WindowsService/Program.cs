@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Linq;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Vanguard.Daemon.Abstractions;
 
 namespace Vanguard.Bot.WindowsService
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Any(t => t == "--foreground") || args.Any(t => t == "-f"))
             {
-                new DaemonBuilder(args)
-                    .ConfigureLogging(options => { })
+                await new DaemonBuilder(args)
                     .UseStartup<Startup>()
                     .UseService<BotManager>()
                     .Build()
-                    .Run();
+                    .RunAsync();
             }
             else
             {
