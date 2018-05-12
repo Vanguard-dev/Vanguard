@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
 namespace Vanguard.Windows.ServiceWrapper
@@ -12,7 +11,7 @@ namespace Vanguard.Windows.ServiceWrapper
         private Process _process;
 
         public event EventHandler Exited;
-        public bool IsRunning => !_process?.HasExited ?? false;
+        public bool IsRunning { get; private set; }
         public ServiceDefinition ServiceDefinition { get; set; }
 
         public ServiceHost(ServiceDefinition serviceDefinition, ILoggerFactory loggerFactory)
@@ -34,6 +33,7 @@ namespace Vanguard.Windows.ServiceWrapper
                 WindowStyle = ProcessWindowStyle.Hidden
             };
             _process = Process.Start(startInfo);
+            IsRunning = true;
             if (_process == null)
             {
                 OnProcessExit(null, null);
@@ -48,6 +48,7 @@ namespace Vanguard.Windows.ServiceWrapper
             if (IsRunning)
             {
                 _process?.Kill();
+                IsRunning = false;
             }
         }
 
@@ -63,6 +64,7 @@ namespace Vanguard.Windows.ServiceWrapper
 
         private void OnProcessExit(object sender, EventArgs e)
         {
+            IsRunning = false;
             Exited?.Invoke(this, EventArgs.Empty);
         }
 

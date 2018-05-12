@@ -1,21 +1,28 @@
 ﻿using System;
 using System.Linq;
 using System.ServiceProcess;
+using System.Threading.Tasks;
 using Vanguard.Daemon.Abstractions;
 
 namespace Vanguard.Windows.ServiceWrapper
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Any(t => t == "--foreground") || args.Any(t => t == "-f"))
             {
-                var workTask = new DaemonBuilder(args)
-                    .UseService<Daemon>()
-                    .Build()
-                    .RunAsync();
-                workTask.GetAwaiter().GetResult();
+                try
+                {
+                    await new DaemonBuilder(args)
+                        .UseService<Daemon>()
+                        .Build()
+                        .RunAsync();
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("wtf");
+                }
             }
             else
             {

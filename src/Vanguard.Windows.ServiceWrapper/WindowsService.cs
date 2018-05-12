@@ -2,7 +2,6 @@
 using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
-using System.Threading.Tasks;
 using Vanguard.Daemon.Abstractions;
 
 namespace Vanguard.Windows.ServiceWrapper
@@ -11,7 +10,6 @@ namespace Vanguard.Windows.ServiceWrapper
     {
         private readonly System.ComponentModel.IContainer components;
         private IDaemon _daemon;
-        private Task _workTask;
         private CancellationTokenSource _cancellationTokenSource;
 
         public WindowsService()
@@ -29,7 +27,7 @@ namespace Vanguard.Windows.ServiceWrapper
                 .ConfigureLogging(options => { })
                 .UseService<Daemon>()
                 .Build();
-            _workTask = _daemon.RunAsync(_cancellationTokenSource.Token);
+            _daemon.RunAsync(_cancellationTokenSource.Token);
         }
 
         protected override void OnStop()
