@@ -1,1 +1,23 @@
-<router-outlet></router-outlet>
+<div class="main-container">
+  <div class="alert alert-app-level alert-warning">
+    <div class="alert-items">
+      <div class="alert-item static">
+        <div class="alert-icon-wrapper">
+          <clr-icon class="alert-icon" shape="download"></clr-icon>
+        </div>
+        <div class="alert-text">
+          A new update is now available. Upgrade to v.1234.
+        </div>
+        <div class="alert-actions">
+          <button class="btn alert-action">Install Update</button>
+        </div>
+      </div>
+    </div>
+    <button type="button" class="close" aria-label="Close">
+      <clr-icon aria-hidden="true" shape="close"></clr-icon>
+    </button>
+  </div>
+  <div class="content-container">
+    <router-outlet></router-outlet>
+  </div>
+</div>

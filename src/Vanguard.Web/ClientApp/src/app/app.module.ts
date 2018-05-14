@@ -9,6 +9,7 @@ import { PlaceholderComponent } from './placeholder/placeholder.component';
 import { IdentityModule } from './identity/identity.module';
 import { RegisterPageComponent } from './pages/register-page/register-page.component';
 import { LoginPageComponent } from './pages/login-page/login-page.component';
+import { ClarityModule } from '@clr/angular';
 
 @NgModule({
   declarations: [
@@ -19,6 +20,7 @@ import { LoginPageComponent } from './pages/login-page/login-page.component';
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
+    ClarityModule,
     HttpClientModule,
     ReactiveFormsModule,
     IdentityModule,

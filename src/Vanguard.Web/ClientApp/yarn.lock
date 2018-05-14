@@ -167,6 +167,20 @@
   dependencies:
     tslib "^1.7.1"
 
+"@clr/angular@^0.11.17":
+  version "0.11.17"
+  resolved "https://registry.yarnpkg.com/@clr/angular/-/angular-0.11.17.tgz#e3a8fb8c571a2132e2bad9221ee2c3e7a18c548d"
+  dependencies:
+    tslib "^1.7.1"
+
+"@clr/icons@^0.11.17":
+  version "0.11.17"
+  resolved "https://registry.yarnpkg.com/@clr/icons/-/icons-0.11.17.tgz#eaf9e0e0f112f2682ad1086b823044acf203282c"
+
+"@clr/ui@^0.11.17":
+  version "0.11.17"
+  resolved "https://registry.yarnpkg.com/@clr/ui/-/ui-0.11.17.tgz#2a6d8f3cb2ebb4f8c67ba3758bfde9ba18f0172d"
+
 "@ngtools/json-schema@1.2.0":
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@ngtools/json-schema/-/json-schema-1.2.0.tgz#06e5ecd29e9a37d260a447dd873ea2becd228c4f"
@@ -235,6 +249,10 @@
 "@types/strip-json-comments@0.0.30":
   version "0.0.30"
   resolved "https://registry.yarnpkg.com/@types/strip-json-comments/-/strip-json-comments-0.0.30.tgz#9aa30c04db212a9a0649d6ae6fd50accc40748a1"
+
+"@webcomponents/custom-elements@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@webcomponents/custom-elements/-/custom-elements-1.0.0.tgz#b1726e12074b556aa31b93f36ff6a03a435259c4"
 
 abbrev@1:
   version "1.1.1"

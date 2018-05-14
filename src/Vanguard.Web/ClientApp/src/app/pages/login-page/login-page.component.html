@@ -1,5 +1,9 @@
-<form novalidate [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-  <input type="text" placeholder="Email" formControlName="email">
-  <input type="password" placeholder="Password" formControlName="password">
-  <button type="submit">Login</button>
-</form>
+<div class="login-wrapper">
+  <form novalidate [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login">
+    <div class="login-group">
+      <input type="text" placeholder="Email" formControlName="email" class="username">
+      <input type="password" placeholder="Password" formControlName="password" class="password">
+      <button type="submit" class="btn btn-primary">Login</button>
+    </div>
+  </form>
+</div>
