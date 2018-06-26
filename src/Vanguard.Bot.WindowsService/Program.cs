@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.ServiceProcess;
 using System.Threading.Tasks;
 using Vanguard.Daemon.Abstractions;
+using Vanguard.Daemon.Windows;
 
 namespace Vanguard.Bot.WindowsService
 {
@@ -10,22 +10,19 @@ namespace Vanguard.Bot.WindowsService
     {
         static async Task Main(string[] args)
         {
+            var daemonHost = new DaemonHost()
+                .UseStartup<Startup>()
+                .UseService<BotManager>();
+
             if (args.Any(t => t == "--foreground") || args.Any(t => t == "-f"))
             {
-                await new DaemonBuilder(args)
-                    .UseStartup<Startup>()
-                    .UseService<BotManager>()
-                    .Build()
-                    .RunAsync();
+                await daemonHost.RunAsync();
             }
             else
             {
                 try
                 {
-                    ServiceBase.Run(new ServiceBase[]
-                    {
-                        new BotService()
-                    });
+                    daemonHost.RunAsService();
                 }
                 catch (Exception)
                 {

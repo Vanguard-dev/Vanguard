@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Vanguard.Bot.Abstractions;
 
@@ -14,16 +13,17 @@ namespace Vanguard.Bot.Discord
     {
         private readonly ILogger _logger;
         private readonly DiscordSocketClient _client;
-        private readonly List<string> _allowedSelfAssignRoles;
+        private readonly DiscordBotConfig _configuration;
 
-        public DiscordBot(ILoggerFactory loggerFactory, DiscordSocketClient client, IConfiguration configuration)
+        public DiscordBot(ILoggerFactory loggerFactory, DiscordSocketClient client, DiscordBotConfig configuration)
         {
             _logger = loggerFactory.CreateLogger<DiscordBot>();
             _client = client;
             _client.Log += OnLogMessage;
             _client.Ready += OnReady;
             _client.MessageReceived += OnMessageReceived;
-            configuration.GetSection("Discord").Bind("AllowedSelfAssignRoles", _allowedSelfAssignRoles);
+
+            _configuration = configuration;
         }
 
         private Task OnLogMessage(LogMessage arg)
@@ -70,16 +70,57 @@ namespace Vanguard.Bot.Discord
                 return;
             }
 
-            // TODO: Check if role exists
-            // TODO: Check if role is in allowed self assign roles
-            // TODO: Superset check, ensure role is not an administrator
-            // TODO: Toggle role on user
+            var messageContent = message.Content.ToLower();
+            if (!messageContent.StartsWith("!"))
+            {
+                return;
+            }
+
+            var roleName = messageContent.Substring(1);
+            if (_configuration.AllowedSelfAssignRoles.Any(t => string.Equals(t, roleName, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                ToggleRole(message, roleName);
+            }
+            else
+            {
+                await message.Author.SendMessageAsync($"{roleName} is not a valid or allowed self-assign role. Please contact the administrators or moderators if you need help assigning your own roles.");
+            }
+
+            if (message.Channel.Name == _configuration.SelfAssignChannel)
+            {
+                await message.DeleteAsync();
+            }
         }
 
-        public Task RunAsync(CancellationToken cancellationToken = default)
+        private async void ToggleRole(SocketMessage message, string roleName)
         {
-            // TODO: Start a loop that loops till it's cancelled or a critical error occurs (faulty api auth for example)
-            throw new NotImplementedException();
+            var guildUser = message.Author as SocketGuildUser;
+            var guildRole = guildUser?.Guild.Roles.FirstOrDefault(role => role.Name.ToLower() == roleName);
+
+            if (guildRole == null)
+            {
+                return;
+            }
+
+            // Remove role
+            if (guildUser.Roles.Any(role => role.Name == guildRole.Name))
+            {
+                await guildUser.RemoveRoleAsync(guildRole);
+                await guildUser.SendMessageAsync($"Role {guildRole.Name} removed!");
+            }
+            // Add role
+            else
+            {
+                await guildUser.AddRoleAsync(guildRole);
+                await guildUser.SendMessageAsync($"Role {guildRole.Name} added!");
+            }
+        }
+
+        public async Task RunAsync(CancellationToken cancellationToken = default)
+        {
+            await _client.LoginAsync(TokenType.Bot, _configuration.ApiToken);
+            await _client.StartAsync();
+            await Task.Delay(-1, cancellationToken);
         }
     }
 }

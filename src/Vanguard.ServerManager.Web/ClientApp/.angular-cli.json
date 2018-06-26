@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
   "project": {
-    "name": "Vanguard.Web"
+    "name": "Vanguard.ServerManager.Web"
   },
   "apps": [
     {
@@ -18,36 +18,15 @@
       "testTsconfig": "tsconfig.spec.json",
       "prefix": "app",
       "styles": [
-        "../node_modules/@clr/icons/clr-icons.min.css",
-        "../node_modules/@clr/ui/clr-ui.min.css",
-        "styles.scss"
+        "styles.css",
+        "../node_modules/bootstrap/dist/css/bootstrap.min.css"
       ],
-      "scripts": [
-        "../node_modules/@webcomponents/custom-elements/custom-elements.min.js"
-      ],
-      "environmentSource": "environments/environment.ts",
-      "environments": {
-        "dev": "environments/environment.ts",
-        "prod": "environments/environment.prod.ts"
-      }
-    },
-    {
-      "name": "ssr",
-      "root": "src",
-      "outDir": "dist-server",
-      "assets": [
-        "assets"
-      ],
-      "main": "main.server.ts",
-      "tsconfig": "tsconfig.server.json",
-      "prefix": "app",
       "scripts": [],
       "environmentSource": "environments/environment.ts",
       "environments": {
         "dev": "environments/environment.ts",
         "prod": "environments/environment.prod.ts"
-      },
-      "platform": "server"
+      }
     }
   ],
   "e2e": {
@@ -75,7 +54,7 @@
     }
   },
   "defaults": {
-    "styleExt": "scss",
+    "styleExt": "css",
     "component": {},
     "build": {
       "progress": true

@@ -11,14 +11,14 @@ namespace Vanguard.Daemon.Abstractions
         private readonly ServiceCollection _serviceCollection;
         private readonly IConfigurationRoot _configuration;
         private IStartup _startup;
+        private readonly string _environmentName;
 
         public DaemonBuilder(string[] args)
         {
-            var environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? args.FirstOrDefault(t => t.StartsWith("/Environment:"))?.Split(':').Last() ?? "Production";
-            Console.WriteLine("Starting in {0} environment", environmentName);
+            _environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? args.FirstOrDefault(t => t.StartsWith("/Environment:"))?.Split(':').Last() ?? "Production";
             _configuration = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json", true, true)
-                .AddJsonFile($"appsettings.{environmentName}.json", true, true)
+                .AddJsonFile($"appsettings.{_environmentName}.json", true, true)
                 .AddEnvironmentVariables("VANGUARD_")
                 .AddCommandLine(args)
                 .Build();
@@ -69,6 +69,7 @@ namespace Vanguard.Daemon.Abstractions
 
             var services = _serviceCollection.BuildServiceProvider();
             _startup?.ConfigureApp(services, _configuration);
+            services.GetService<ILoggerFactory>().CreateLogger<DaemonBuilder>().LogInformation("Daemon starting in {0} environment", _environmentName);
             return services.GetRequiredService<IDaemon>();
         }
     }

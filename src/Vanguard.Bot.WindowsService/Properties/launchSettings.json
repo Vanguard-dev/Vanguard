@@ -1,0 +1,11 @@
+{
+  "profiles": {
+    "Vanguard.Bot.WindowsService": {
+      "commandName": "Project",
+      "commandLineArgs": "--foreground",
+      "environmentVariables": {
+        "VANGUARD_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
