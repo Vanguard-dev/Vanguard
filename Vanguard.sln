@@ -21,11 +21,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.Data", "src\Vangua
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.Data.Api", "src\Vanguard.Data.Api\Vanguard.Data.Api.csproj", "{19DA6D90-1FB4-4525-935C-B0B3AD6B6044}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.ServerManager.Web", "src\Vanguard.ServerManager.Web\Vanguard.ServerManager.Web.csproj", "{5A93E870-C442-42E1-83E3-F1E0A4F1945C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.ServerManager.Web", "src\Vanguard.ServerManager.Web\Vanguard.ServerManager.Web.csproj", "{5A93E870-C442-42E1-83E3-F1E0A4F1945C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.ServerManager.Host", "src\Vanguard.ServerManager.Host\Vanguard.ServerManager.Host.csproj", "{DA29AED5-94D8-4BCB-A118-1B7BCBB69DE2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.ServerManager.Host", "src\Vanguard.ServerManager.Host\Vanguard.ServerManager.Host.csproj", "{DA29AED5-94D8-4BCB-A118-1B7BCBB69DE2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.Daemon.Windows", "src\Vanguard.Daemon.Windows\Vanguard.Daemon.Windows.csproj", "{1AB37810-0305-4CAD-A87E-A59D79404ED5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vanguard.Daemon.Windows", "src\Vanguard.Daemon.Windows\Vanguard.Daemon.Windows.csproj", "{1AB37810-0305-4CAD-A87E-A59D79404ED5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.IdentityServer", "src\Vanguard.IdentityServer\Vanguard.IdentityServer.csproj", "{635B491F-BE40-48B7-8CB2-0D2F77570B2A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vanguard.IdentityServer.Api", "Vanguard.IdentityServer.Api\Vanguard.IdentityServer.Api.csproj", "{81D0AC3F-AE38-48A6-A8C9-CC18440E209A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +81,14 @@ Global
 		{1AB37810-0305-4CAD-A87E-A59D79404ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1AB37810-0305-4CAD-A87E-A59D79404ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1AB37810-0305-4CAD-A87E-A59D79404ED5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{635B491F-BE40-48B7-8CB2-0D2F77570B2A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{635B491F-BE40-48B7-8CB2-0D2F77570B2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{635B491F-BE40-48B7-8CB2-0D2F77570B2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{635B491F-BE40-48B7-8CB2-0D2F77570B2A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81D0AC3F-AE38-48A6-A8C9-CC18440E209A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81D0AC3F-AE38-48A6-A8C9-CC18440E209A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81D0AC3F-AE38-48A6-A8C9-CC18440E209A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81D0AC3F-AE38-48A6-A8C9-CC18440E209A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +105,8 @@ Global
 		{5A93E870-C442-42E1-83E3-F1E0A4F1945C} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 		{DA29AED5-94D8-4BCB-A118-1B7BCBB69DE2} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 		{1AB37810-0305-4CAD-A87E-A59D79404ED5} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
+		{635B491F-BE40-48B7-8CB2-0D2F77570B2A} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
+		{81D0AC3F-AE38-48A6-A8C9-CC18440E209A} = {713D534D-7CD3-401F-AB3E-770118A67FF2}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {15CBC869-B055-4E6B-A5DC-5291CE178490}

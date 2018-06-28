@@ -1,0 +1,25 @@
+:host {
+  flex: 1;
+  display: flex;
+}
+
+.login-wrapper {
+  flex: 1;
+  justify-content: center;
+  align-items: center;
+  background-color: #656565;
+  background-image: none;
+  background-repeat: no-repeat;
+  background-size: auto 512px;
+  background-position: left 20px bottom -20px;
+
+  .login {
+    min-height: 0;
+    height: 512px;
+    box-shadow: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+
+    &:after {
+      display: none;
+    }
+  }
+}

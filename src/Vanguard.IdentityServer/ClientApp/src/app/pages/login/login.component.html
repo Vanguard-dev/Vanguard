@@ -1,0 +1,23 @@
+<div class="login-wrapper">
+  <form class="login" [formGroup]="loginForm" novalidate (ngSubmit)="onSubmit()">
+    <label class="title">
+      Vanguard IM
+      <h5 class="hint">Sign in to management console.</h5>
+    </label>
+    <div class="login-group">
+      <input class="username" type="text" placeholder="Email Address" autofocus formControlName="username">
+      <input class="password" type="password" placeholder="Password" formControlName="password">
+      <div class="checkbox">
+        <input type="checkbox" id="rememberme">
+        <label for="rememberme">
+          Remember Me
+        </label>
+      </div>
+      <div class="error active" *ngIf="errorMessage">
+        {{ errorMessage }}
+      </div>
+      <button type="submit" class="btn btn-primary">SIGN IN</button>
+      <a routerLink="/register" class="signup">Enroll to Vanguard IM</a>
+    </div>
+  </form>
+</div>
