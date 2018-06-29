@@ -11,8 +11,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json.Serialization;
-using Vanguard.Data;
-using Vanguard.Data.Entities;
+using Vanguard.Web.Data;
+using Vanguard.Web.Data.Entities;
 using Vanguard.Web.Services;
 
 namespace Vanguard.Web
@@ -32,7 +32,7 @@ namespace Vanguard.Web
             // Add database
             services.AddDbContext<VanguardDbContext>(options =>
             {
-                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"), opts => opts.MigrationsAssembly("Vanguard.Data"));
+                options.UseNpgsql(Configuration.GetConnectionString("DefaultConnection"));
             });
 
             // Add identity

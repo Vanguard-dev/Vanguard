@@ -36,10 +36,6 @@ namespace Vanguard.IdentityServer.Controllers
         [Produces("application/json")]
         public async Task<IActionResult> Exchange(OpenIdConnectRequest request)
         {
-            Debug.Assert(request.IsTokenRequest(),
-                "The OpenIddict binder for ASP.NET Core MVC is not registered. " +
-                "Make sure services.AddOpenIddict().AddMvcBinders() is correctly called.");
-
             if (request.IsPasswordGrantType())
             {
                 var user = await _userManager.FindByNameAsync(request.Username);

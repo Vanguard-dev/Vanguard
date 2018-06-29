@@ -30,13 +30,11 @@ export class LoginComponent implements OnInit {
 
   async onSubmit() {
     if (this.loginForm.valid) {
-      const result = await this.identity.login(this.loginForm.value).toPromise();
-      console.log(result);
-      if (result.succeeded) {
+      const result = await this.identity.login(this.loginForm.value);
+      if (result.success) {
         await this.router.navigateByUrl(this.returnUrl || '/');
       } else {
-        // TODO: Display error based on backend return
-        this.errorMessage = 'Tarkista käyttäjätunnus ja salasana.';
+        this.errorMessage = result.errorMessage;
         setTimeout(() => {
           this.errorMessage = '';
         }, 10000);

@@ -1,4 +1,6 @@
+using System.IdentityModel.Tokens.Jwt;
 using AspNet.Security.OpenIdConnect.Primitives;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -8,6 +10,8 @@ using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using OpenIddict.Abstractions;
 using Vanguard.IdentityServer.Data;
 using Vanguard.IdentityServer.Data.Entities;
 
@@ -15,14 +19,15 @@ namespace Vanguard.IdentityServer
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public IConfiguration Configuration { get; }
+        public IHostingEnvironment HostingEnvironment { get; }
+
+        public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
             Configuration = configuration;
+            HostingEnvironment = env;
         }
 
-        public IConfiguration Configuration { get; }
-
-        // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
@@ -58,87 +63,84 @@ namespace Vanguard.IdentityServer
             });
 
             services.AddOpenIddict()
-
-                // Register the OpenIddict core services.
                 .AddCore(options =>
                 {
-                    // Register the Entity Framework stores and models.
                     options.UseEntityFrameworkCore()
-                           .UseDbContext<VanguardIdentityDbContext>();
+                        .UseDbContext<VanguardIdentityDbContext>();
                 })
-
-                // Register the OpenIddict server handler.
                 .AddServer(options =>
                 {
-                    // Register the ASP.NET Core MVC binder used by OpenIddict.
-                    // Note: if you don't call this method, you won't be able to
-                    // bind OpenIdConnectRequest or OpenIdConnectResponse parameters.
                     options.UseMvc();
 
-                    // Enable the token endpoint.
-                    options.EnableTokenEndpoint("/connect/token");
+                    options.EnableTokenEndpoint("/connect/token")
+                        .EnableAuthorizationEndpoint("/connect/authorize")
+                        .EnableLogoutEndpoint("/connect/logout")
+                        .EnableIntrospectionEndpoint("/connect/introspect");
 
-                    // Enable the password and the refresh token flows.
-                    options.AllowPasswordFlow()
-                           .AllowRefreshTokenFlow();
+                    options.AllowImplicitFlow()
+                        .AllowPasswordFlow()
+                        .AllowRefreshTokenFlow();
 
-                    // Accept anonymous clients (i.e clients that don't send a client_id).
+                    options.RegisterScopes(
+                        OpenIdConnectConstants.Scopes.Email,
+                        OpenIdConnectConstants.Scopes.Profile,
+                        OpenIddictConstants.Scopes.Roles
+                    );
+
                     options.AcceptAnonymousClients();
 
-                    // During development, you can disable the HTTPS requirement.
-                    options.DisableHttpsRequirement();
+                    if (HostingEnvironment.IsDevelopment())
+                    {
+                        options.DisableHttpsRequirement();
+                        options.AddEphemeralSigningKey();
+                    }
+                    else
+                    {
+                        // Register a new ephemeral key, that is discarded when the application
+                        // shuts down. Tokens signed using this key are automatically invalidated.
+                        // This method should only be used during development.
 
-                    // Note: to use JWT access tokens instead of the default
-                    // encrypted format, the following lines are required:
-                    //
-                    // options.UseJsonWebTokens();
-                    // options.AddEphemeralSigningKey();
+                        // On production, using a X.509 certificate stored in the machine store is recommended.
+                        // You can generate a self-signed certificate using Pluralsight's self-cert utility:
+                        // https://s3.amazonaws.com/pluralsight-free/keith-brown/samples/SelfCert.zip
+                        //
+                        // options.AddSigningCertificate("7D2A741FE34CC2C7369237A5F2078988E17A6A75");
+                        //
+                        // Alternatively, you can also store the certificate as an embedded .pfx resource
+                        // directly in this assembly or in a file published alongside this project:
+                        //
+                        // options.AddSigningCertificate(
+                        //     assembly: typeof(Startup).GetTypeInfo().Assembly,
+                        //     resource: "AuthorizationServer.Certificate.pfx",
+                        //     password: "OpenIddict");
+                    }
+
+                    options.UseJsonWebTokens();
+                });
+
+            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
+            JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
+
+            services.AddAuthentication(options =>
+                {
+                    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultSignInScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
                 })
-
-                // Register the OpenIddict validation handler.
-                // Note: the OpenIddict validation handler is only compatible with the
-                // default token format or with reference tokens and cannot be used with
-                // JWT tokens. For JWT tokens, use the Microsoft JWT bearer handler.
-                .AddValidation();
-
-            // If you prefer using JWT, don't forget to disable the automatic
-            // JWT -> WS-Federation claims mapping used by the JWT middleware:
-            //
-            // JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
-            // JwtSecurityTokenHandler.DefaultOutboundClaimTypeMap.Clear();
-            //
-            // services.AddAuthentication()
-            //     .AddJwtBearer(options =>
-            //     {
-            //         options.Authority = "http://localhost:54895/";
-            //         options.Audience = "resource_server";
-            //         options.RequireHttpsMetadata = false;
-            //         options.TokenValidationParameters = new TokenValidationParameters
-            //         {
-            //             NameClaimType = OpenIdConnectConstants.Claims.Subject,
-            //             RoleClaimType = OpenIdConnectConstants.Claims.Role
-            //         };
-            //     });
-
-            // Alternatively, you can also use the introspection middleware.
-            // Using it is recommended if your resource server is in a
-            // different application/separated from the authorization server.
-            //
-            // services.AddAuthentication()
-            //     .AddOAuthIntrospection(options =>
-            //     {
-            //         options.Authority = new Uri("http://localhost:54895/");
-            //         options.Audiences.Add("resource_server");
-            //         options.ClientId = "resource_server";
-            //         options.ClientSecret = "875sqd4s5d748z78z7ds1ff8zz8814ff88ed8ea4z4zzd";
-            //         options.RequireHttpsMetadata = false;
-            //     });
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = "https://localhost:5001/";
+                    options.Audience = "vanguard-identity-management";
+                    options.RequireHttpsMetadata = !HostingEnvironment.IsDevelopment();
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        NameClaimType = OpenIdConnectConstants.Claims.Subject,
+                        RoleClaimType = OpenIdConnectConstants.Claims.Role
+                    };
+                });
 
             // In production, the Angular files will be served from this directory
-            services.AddSpaStaticFiles(configuration =>
-            {
-                configuration.RootPath = "ClientApp/dist";
-            });
+            services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/dist"; });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

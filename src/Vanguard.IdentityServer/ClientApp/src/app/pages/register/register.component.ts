@@ -23,7 +23,7 @@ export class RegisterComponent implements OnInit {
 
   async onSubmit() {
     if (this.registerForm.valid) {
-      const result = await this.identity.register(this.registerForm.value).toPromise();
+      const result = await this.identity.register(this.registerForm.value);
       console.log(result);
       // TODO: Check for errors and update error messages
     } else {

@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Vanguard.Data.Entities;
+using Vanguard.Web.Data.Entities;
 using Vanguard.Web.Models.AccountViewModels;
 
 namespace Vanguard.Web.Controllers

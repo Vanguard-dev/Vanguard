@@ -27,7 +27,7 @@ export interface IdentityToken {
   id_token: string;
   expires_in: number;
   token_type: string;
-  expiration_date: string;
+  expiration_date: number;
 }
 
 export interface IdentityProfile {
@@ -46,7 +46,7 @@ export interface IdentityProfile {
 }
 
 export interface IdentityState {
-  token?: IdentityToken;
+  tokens?: IdentityToken;
   profile?: IdentityProfile;
 }
 
@@ -65,8 +65,13 @@ export interface IdentityRegistration {
   confirmPassword: string;
 }
 
+export interface IdentityActionResult {
+  success: boolean;
+  errorMessage?: string;
+}
+
 const initialState: IdentityState = {
-  token: null,
+  tokens: null,
   profile: null
 };
 
@@ -79,14 +84,14 @@ export class IdentityService {
   private refreshSubscription$: Subscription;
 
   // TODO: Refactor to server-side friendly version
-  private get token(): IdentityToken {
-    const tokenString = localStorage.getItem(STORAGE_IDENTITY_TOKEN);
-    return tokenString == null ? null : JSON.parse(tokenString);
+  private get tokens(): IdentityToken {
+    const tokensString = localStorage.getItem(STORAGE_IDENTITY_TOKEN);
+    return tokensString == null ? null : JSON.parse(tokensString);
   }
 
   // TODO: Refactor to server-side friendly version
-  private set token(token: IdentityToken) {
-    const previousToken = this.token;
+  private set tokens(token: IdentityToken) {
+    const previousToken = this.tokens;
     if (previousToken != null && token.refresh_token == null) {
       token.refresh_token = previousToken.refresh_token;
     }
@@ -94,20 +99,40 @@ export class IdentityService {
   }
 
   state$: Observable<IdentityState>;
-  token$: Observable<IdentityToken>;
+  tokens$: Observable<IdentityToken>;
   profile$: Observable<IdentityProfile>;
   authenticated$: Observable<boolean>;
+
+  get isAuthenticated(): boolean {
+    const tokens = this.tokens;
+    return tokens && tokens.expiration_date > new Date().getTime();
+  }
+
+  get profile(): IdentityProfile {
+    return this.state.getValue().profile;
+  }
+
+  get roles(): string[] {
+    const profile = this.profile;
+    return profile ? profile.role : [];
+  }
+
+  get accessToken(): string {
+    const tokens = this.tokens;
+    console.log('getting access token', tokens.access_token);
+    return tokens && tokens.expiration_date > new Date().getTime() ? tokens.access_token : null;
+  }
 
   constructor(private http: HttpClient) {
     this.state = new BehaviorSubject<IdentityState>(initialState);
     this.state$ = this.state.asObservable();
-    this.token$ = this.state.pipe(
-      map(state => state.token)
+    this.tokens$ = this.state.pipe(
+      map(state => state.tokens)
     );
     this.profile$ = this.state.pipe(
       map(state => state.profile)
     );
-    this.authenticated$ = this.token$.pipe(
+    this.authenticated$ = this.tokens$.pipe(
       map(tokens => !!tokens)
     );
   }
@@ -118,18 +143,39 @@ export class IdentityService {
     );
   }
 
-  register(registration: IdentityRegistration): Observable<any> {
-    return this.http.post<any>(`/account/register`, registration).pipe(
-      catchError(response => throwError(response))
-    );
+  async register(registration: IdentityRegistration): Promise<IdentityActionResult> {
+    try {
+      await this.http.post<any>(`/account/register`, registration).pipe(
+        catchError(response => throwError(response))
+      ).toPromise();
+
+      return {
+        success: true
+      };
+    } catch (err) {
+      return {
+        success: false,
+        errorMessage: err.error.error_description
+      };
+    }
   }
 
-  login(credentials: IdentityCredentials): Observable<any> {
-    console.log(credentials);
-    return this.fetchToken(credentials, 'password').pipe(
-      catchError(response => throwError(response)),
-      tap(response => this.scheduleRefresh())
-    );
+  async login(credentials: IdentityCredentials): Promise<IdentityActionResult> {
+    try {
+      await this.fetchToken(credentials, 'password').pipe(
+        catchError(res => throwError(res)),
+        tap(() => this.scheduleRefresh())
+      ).toPromise();
+
+      return {
+        success: true
+      };
+    } catch (err) {
+      return {
+        success: false,
+        errorMessage: err.error.error_description
+      };
+    }
   }
 
   logout(): void {
@@ -143,7 +189,7 @@ export class IdentityService {
   refresh(): Observable<IdentityToken> {
     return this.state.pipe(
       first(),
-      map(state => state.token),
+      map(state => state.tokens),
       flatMap(token =>
         this.fetchToken({ refresh_token: token.refresh_token }, 'refresh_token').pipe(
           catchError(() => throwError('Session expired'))
@@ -155,6 +201,7 @@ export class IdentityService {
   private updateState(newState: IdentityState): void {
     const previousState = this.state.getValue();
     this.state.next(Object.assign({}, previousState, newState));
+    console.log('state updated', this.state.getValue());
   }
 
   private removeToken(): void {
@@ -166,27 +213,27 @@ export class IdentityService {
     const params = new URLSearchParams();
     Object.keys(payload).forEach(key => params.append(key, payload[key]));
     return this.http.post<any>(`/connect/token`, params.toString(), oauthRequestOptions).pipe(
-      tap((token: IdentityToken) => {
-        token.expiration_date = new Date(new Date().getTime() + token.expires_in * 1000).getTime().toString();
-        const profile = jwtDecode(token.id_token);
-        this.token = token;
-        this.updateState({ profile, token });
+      tap((tokens: IdentityToken) => {
+        tokens.expiration_date = new Date(new Date().getTime() + tokens.expires_in * 1000).getTime();
+        const profile = jwtDecode(tokens.id_token);
+        this.tokens = tokens;
+        this.updateState({ profile, tokens });
       })
     );
   }
 
   private startupRefresh(): Observable<IdentityToken> {
-    return of(this.token).pipe(
-      flatMap((token: IdentityToken) => {
-        if (!token) {
+    return of(this.tokens).pipe(
+      flatMap((tokens: IdentityToken) => {
+        if (!tokens) {
           this.updateState(initialState);
           return throwError('No token in Storage');
         }
 
-        const profile = jwtDecode(token.id_token) as IdentityProfile;
-        this.updateState({ token, profile });
+        const profile = jwtDecode(tokens.id_token) as IdentityProfile;
+        this.updateState({ tokens, profile });
 
-        if (+token.expiration_date > new Date().getTime()) {
+        if (tokens.expiration_date > new Date().getTime()) {
           this.updateState(this.state.getValue());
         }
 
@@ -200,7 +247,7 @@ export class IdentityService {
   }
 
   private scheduleRefresh(): void {
-    this.refreshSubscription$ = this.token$
+    this.refreshSubscription$ = this.tokens$
       .pipe(
         first(),
         flatMap(token => interval(token.expires_in / 2 * 1000)),
