@@ -138,26 +138,10 @@ namespace Vanguard.Web
 
                 spa.Options.SourcePath = "ClientApp";
 
-                spa.UseSpaPrerendering(options =>
-                {
-                    options.BootModulePath = $"{spa.Options.SourcePath}/dist-server/main.bundle.js";
-                    options.BootModuleBuilder = env.IsDevelopment()
-                        ? new AngularCliBuilder(npmScript: "build:ssr")
-                        : null;
-                    options.ExcludeUrls = new[] { "/sockjs-node" };
-                    options.SupplyData = (context, data) =>
-                    {
-                        // TODO: Supply session to app here
-                        data["session"] = new
-                        {
-                            UserName = "test"
-                        };
-                    };
-                });
-
                 if (env.IsDevelopment())
                 {
-                    spa.UseAngularCliServer(npmScript: "start");
+                    // spa.UseAngularCliServer(npmScript: "start");
+                    spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
                 }
             });
         }
