@@ -9,7 +9,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using Vanguard.Daemon.Abstractions;
 using Vanguard.Daemon.Windows;
 using Vanguard.ServerManager.Core.Api;
@@ -21,6 +24,11 @@ namespace Vanguard.ServerManager.Node
     {
         static void Main(string[] args)
         {
+            var daemonHost = new DaemonHost()
+                .UseService<Daemon>();
+
+            var logger = daemonHost.Services.GetService<ILoggerFactory>().CreateLogger("Main");
+
             var app = new CommandLineApplication { Name = "Vanguard Server Manager Node" };
             app.HelpOption("-?|-h|--help", true);
 
@@ -70,27 +78,39 @@ namespace Vanguard.ServerManager.Node
                         {
                             var apiRoot = $"{(useHttp.HasValue() ? "http" : "https")}://{coreHostname}";
                             var authResponse = await client.PostAsync($"{apiRoot}/connect/token", new StringContent($"username={WebUtility.UrlEncode(coreUsername)}&password={WebUtility.UrlEncode(corePassword)}&grant_type=password&scope=openid+offline_access", Encoding.Default, "application/x-www-form-urlencoded"));
-                            authResponse.EnsureSuccessStatusCode();
+                            if (!authResponse.IsSuccessStatusCode)
+                            {
+                                logger.LogError("Failed to register the node: [{0}] {1}", authResponse.StatusCode, await authResponse.Content.ReadAsStringAsync());
+                                return 1;
+                            }
                             var bearerToken = JsonConvert.DeserializeObject<dynamic>(await authResponse.Content.ReadAsStringAsync()).access_token.Value;
 
+                            var registrationPayload = JsonConvert.SerializeObject(new ServerNodeViewModel
+                            {
+                                Name = nodeName,
+                                PublicKey = certificate.GetPublicKeyString()
+                            }, Formatting.None, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
+                            logger.LogDebug("Attempting to register the node. Payload: {0}", registrationPayload);
                             var registrationResponse = await client.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"{apiRoot}/api/node")
                             {
                                 Method = HttpMethod.Post,
                                 Headers = { Authorization = new AuthenticationHeaderValue("Bearer", bearerToken) },
-                                Content = new StringContent(JsonConvert.SerializeObject(new ServerNodeViewModel
-                                {
-                                    Name = nodeName,
-                                    PublicKey = certificate.GetPublicKeyString()
-                                }))
+                                Content = new StringContent(registrationPayload, Encoding.Default, "application/json")
                             });
-                            registrationResponse.EnsureSuccessStatusCode();
+                            if (!registrationResponse.IsSuccessStatusCode)
+                            {
+                                logger.LogError("Failed to register the node: [{0}] {1}", registrationResponse.StatusCode, await registrationResponse.Content.ReadAsStringAsync());
+                                return 1;
+                            }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine(ex);
+                        logger.LogError("Install failed due to an unexpected exception: {0}", ex);
                         throw;
                     }
+
+                    return 0;
                 });
             });
 
@@ -100,12 +120,9 @@ namespace Vanguard.ServerManager.Node
 
                 command.OnExecute(async () =>
                 {
-                    var daemonHost = new DaemonHost()
-                        .UseService<Daemon>();
-
-                    if (foregroundSwitch.HasValue())
+                    try
                     {
-                        try
+                        if (foregroundSwitch.HasValue())
                         {
                             var cancellationTokenSource = new CancellationTokenSource();
                             var workTask = daemonHost.RunAsync(cancellationTokenSource.Token);
@@ -113,21 +130,14 @@ namespace Vanguard.ServerManager.Node
                             cancellationTokenSource.Cancel();
                             await workTask;
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex);
-                        }
-                    }
-                    else
-                    {
-                        try
+                        else
                         {
                             daemonHost.RunAsService();
                         }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine(ex);
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError("Start failed due to an unexpected exception: {0}", ex);
                     }
                 });
             });

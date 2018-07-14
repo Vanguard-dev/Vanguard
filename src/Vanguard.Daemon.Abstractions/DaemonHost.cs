@@ -12,6 +12,19 @@ namespace Vanguard.Daemon.Abstractions
         private IDaemon _daemon;
         public IDaemon Daemon => _daemon ?? (_daemon = _builder.Build());
 
+        public ServiceProvider Services
+        {
+            get
+            {
+                if (_daemon == null)
+                {
+                    _daemon = _builder.Build();
+                }
+
+                return _builder.Services;
+            }
+        }
+
         public DaemonHost()
         {
             var args = Environment.GetCommandLineArgs()

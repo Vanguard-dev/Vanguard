@@ -8,10 +8,7 @@ import { HttpClient } from '@angular/common/http';
 })
 export class DashboardComponent implements OnInit {
 
-  constructor(private http: HttpClient) { }
-
   ngOnInit() {
-    this.http.get('/application/message').subscribe(result => console.log(result));
   }
 
 }

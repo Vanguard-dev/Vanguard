@@ -13,6 +13,20 @@ namespace Vanguard.Daemon.Abstractions
         private IStartup _startup;
         private readonly string _environmentName;
 
+        private ServiceProvider _services;
+        public ServiceProvider Services
+        {
+            get
+            {
+                if (_services == null)
+                {
+                    throw new InvalidOperationException("Unable to access service provider before the daemon has been built. Use Build() to build the daemon.");
+                }
+
+                return _services;
+            }
+        }
+
         public DaemonBuilder(string[] args)
         {
             _environmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT") ?? args.FirstOrDefault(t => t.StartsWith("/Environment:"))?.Split(':').Last() ?? "Production";
@@ -61,16 +75,24 @@ namespace Vanguard.Daemon.Abstractions
 
         public IDaemon Build()
         {
-            // Ensure mandatory services are configured
-            if (_serviceCollection.All(t => t.ServiceType != typeof(IDaemon)))
+            if (_services == null)
             {
-                throw new EntryPointNotFoundException("You need to provide the required IDaemon implementation for the service logic");
+                // Ensure mandatory services are configured
+                if (_serviceCollection.All(t => t.ServiceType != typeof(IDaemon)))
+                {
+                    throw new EntryPointNotFoundException("You need to provide the required IDaemon implementation for the service logic");
+                }
+
+                _services = _serviceCollection.BuildServiceProvider();
+                _startup?.ConfigureApp(_services, _configuration);
+                _services.GetService<ILoggerFactory>().CreateLogger<DaemonBuilder>().LogInformation("Daemon starting in {0} environment", _environmentName);
+            }
+            else
+            {
+                _services.GetService<ILoggerFactory>().CreateLogger<DaemonBuilder>().LogWarning("Daemon has already been built in {0} environment. Returning the existing instance. Check your code if this is not intentional", _environmentName);
             }
 
-            var services = _serviceCollection.BuildServiceProvider();
-            _startup?.ConfigureApp(services, _configuration);
-            services.GetService<ILoggerFactory>().CreateLogger<DaemonBuilder>().LogInformation("Daemon starting in {0} environment", _environmentName);
-            return services.GetRequiredService<IDaemon>();
+            return _services.GetRequiredService<IDaemon>();
         }
     }
 }

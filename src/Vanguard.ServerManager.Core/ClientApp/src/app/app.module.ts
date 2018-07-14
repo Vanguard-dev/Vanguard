@@ -1,6 +1,6 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 import { ClarityModule } from '@clr/angular';
@@ -12,7 +12,11 @@ import { EffectsModule } from '@ngrx/effects';
 
 import { environment } from '../environments/environment';
 
+import { CustomRouteSerializer } from './state/utils';
 import { appMetaReducers, appReducer } from './state/app.reducer';
+import { ServerNodeEffects } from './state/server-node/effects';
+
+import { IdentityInterceptor } from './identity/identity.interceptor';
 
 import { AppComponent } from './app.component';
 import { LoginComponent } from './pages/login/login.component';
@@ -21,7 +25,6 @@ import { AppRoutingModule } from './app-routing.module';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RegisterComponent } from './pages/register/register.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { CustomRouteSerializer } from './state/utils';
 
 @NgModule({
   declarations: [
@@ -43,13 +46,18 @@ import { CustomRouteSerializer } from './state/utils';
     }),
     StoreRouterConnectingModule.forRoot(),
     EffectsModule.forRoot([
-
+      ServerNodeEffects
     ]),
     !environment.production ? StoreDevtoolsModule.instrument() : [],
 
     AppRoutingModule
   ],
   providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: IdentityInterceptor,
+      multi: true
+    },
     {
       provide: RouterStateSerializer,
       useClass: CustomRouteSerializer

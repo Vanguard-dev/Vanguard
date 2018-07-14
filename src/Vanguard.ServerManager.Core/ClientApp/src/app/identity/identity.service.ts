@@ -119,7 +119,6 @@ export class IdentityService {
 
   get accessToken(): string {
     const tokens = this.tokens;
-    console.log('getting access token', tokens.access_token);
     return tokens && tokens.expiration_date > new Date().getTime() ? tokens.access_token : null;
   }
 
@@ -201,7 +200,6 @@ export class IdentityService {
   private updateState(newState: IdentityState): void {
     const previousState = this.state.getValue();
     this.state.next(Object.assign({}, previousState, newState));
-    console.log('state updated', this.state.getValue());
   }
 
   private removeToken(): void {
