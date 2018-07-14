@@ -76,14 +76,30 @@ namespace Vanguard.Bot.Discord
                 return;
             }
 
-            var roleName = messageContent.Substring(1);
-            if (_configuration.AllowedSelfAssignRoles.Any(t => string.Equals(t, roleName, StringComparison.CurrentCultureIgnoreCase)))
+            if (messageContent.StartsWith("!serverinfo"))
             {
-                ToggleRole(message, roleName);
+                var serverKeyword = messageContent.Split(' ')[1];
+                var serverInfo = _configuration.ServerList.FirstOrDefault(t => t.Keywords.Contains(serverKeyword.ToLower()));
+                if (serverInfo != null)
+                {
+                    await message.Author.SendMessageAsync(serverInfo.Description);
+                }
+                else
+                {
+                    await message.Author.SendMessageAsync($"No server info found for {serverKeyword}");
+                }
             }
             else
             {
-                await message.Author.SendMessageAsync($"{roleName} is not a valid or allowed self-assign role. Please contact the administrators or moderators if you need help assigning your own roles.");
+                var roleName = messageContent.Substring(1);
+                if (_configuration.AllowedSelfAssignRoles.Any(t => string.Equals(t, roleName, StringComparison.CurrentCultureIgnoreCase)))
+                {
+                    ToggleRole(message, roleName);
+                }
+                else
+                {
+                    await message.Author.SendMessageAsync($"{roleName} is not a valid or allowed self-assign role. Please contact the administrators or moderators if you need help assigning your own roles.");
+                }
             }
 
             if (message.Channel.Name == _configuration.SelfAssignChannel)

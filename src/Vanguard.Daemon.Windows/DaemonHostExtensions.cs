@@ -8,6 +8,7 @@ namespace Vanguard.Daemon.Windows
     {
         public static void RunAsService(this DaemonHost host)
         {
+            // TODO: Add support for systemd services
             ServiceBase.Run(new ServiceBase[]
             {
                 new WindowsService(host.Daemon)
