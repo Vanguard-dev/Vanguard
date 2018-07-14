@@ -16,6 +16,8 @@ namespace Vanguard.ServerManager.Node.Core
         private readonly NodeOptions _options;
         private IdentityTokens _tokens;
 
+        public bool IsAuthenticated => _tokens != null && _tokens.ExpirationDate > DateTime.UtcNow;
+        public string AccessToken => _tokens?.AccessToken;
         public AuthenticationHeaderValue AuthorizationHeader
         {
             get
@@ -33,8 +35,6 @@ namespace Vanguard.ServerManager.Node.Core
                 return new AuthenticationHeaderValue("Bearer", _tokens.AccessToken);
             }
         }
-
-        public bool IsAuthenticated => _tokens != null && _tokens.ExpirationDate > DateTime.UtcNow;
 
         public Authenticator(NodeOptions options)
         {

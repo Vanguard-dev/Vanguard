@@ -1,3 +1,4 @@
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Microsoft.AspNetCore.Builder;
@@ -11,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using OpenIddict.Abstractions;
 using OpenIddict.Validation;
 using Vanguard.ServerManager.Core.Entities;
+using Vanguard.ServerManager.Core.Hubs;
 using Vanguard.ServerManager.Core.Services;
 
 namespace Vanguard.ServerManager.Core
@@ -30,6 +32,7 @@ namespace Vanguard.ServerManager.Core
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddCors();
+            services.AddSignalR();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddDbContext<VanguardDbContext>(options =>
@@ -80,6 +83,8 @@ namespace Vanguard.ServerManager.Core
 
                     options.AllowPasswordFlow()
                         .AllowRefreshTokenFlow();
+
+                    options.SetAccessTokenLifetime(TimeSpan.FromMinutes(1));
 
                     options.RegisterScopes(
                         OpenIdConnectConstants.Scopes.Email,
@@ -160,6 +165,11 @@ namespace Vanguard.ServerManager.Core
             app.UseSpaStaticFiles();
 
             app.UseAuthentication();
+
+            app.UseSignalR(routes =>
+            {
+                routes.MapHub<NodeHub>("/hubs/node");
+            });
 
             app.UseMvc(routes =>
             {
