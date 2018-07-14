@@ -248,13 +248,20 @@ namespace Vanguard.ServerManager.Core.Migrations
 
                     b.Property<string>("Name");
 
-                    b.Property<string>("PublicKey");
+                    b.Property<string>("PublicKey")
+                        .IsRequired();
+
+                    b.Property<string>("UserId");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique()
                         .HasFilter("[Name] IS NOT NULL");
+
+                    b.HasIndex("UserId")
+                        .IsUnique()
+                        .HasFilter("[UserId] IS NOT NULL");
 
                     b.ToTable("ServerNodes");
                 });
@@ -283,8 +290,9 @@ namespace Vanguard.ServerManager.Core.Migrations
                     b.ToTable("AspNetRoles");
 
                     b.HasData(
-                        new { Id = "dc5ef158-e5a4-4b7c-aa54-217133585351", ConcurrencyStamp = "bd95f083-c297-4fa8-824f-c71cfd886d1a", Name = "NodeAdmin", NormalizedName = "NODEADMIN" },
-                        new { Id = "ee8256d1-9f37-40e8-8c57-0826047987d1", ConcurrencyStamp = "b02e79c3-b11e-4732-a9fe-e518e848984e", Name = "UserAdmin", NormalizedName = "USERADMIN" }
+                        new { Id = "baa42c1d-648c-423e-84f8-a9680473010f", ConcurrencyStamp = "a093d86b-2d3f-4673-9eb3-275e71673c78", Name = "NodeAdmin", NormalizedName = "NODEADMIN" },
+                        new { Id = "67f3124c-b132-415f-871d-3c3ed0a1e9fa", ConcurrencyStamp = "ef941296-2565-4f28-bb34-214370a0c6b1", Name = "UserAdmin", NormalizedName = "USERADMIN" },
+                        new { Id = "81d12ca9-4220-4711-b6b9-eca90f1b63a9", ConcurrencyStamp = "742603b8-7dd0-46ea-aaa5-9e4d40d7fd8d", Name = "NodeAgent", NormalizedName = "NODEAGENT" }
                     );
                 });
 
@@ -400,6 +408,14 @@ namespace Vanguard.ServerManager.Core.Migrations
                     b.HasOne("OpenIddict.EntityFrameworkCore.Models.OpenIddictAuthorization", "Authorization")
                         .WithMany("Tokens")
                         .HasForeignKey("AuthorizationId");
+                });
+
+            modelBuilder.Entity("Vanguard.ServerManager.Core.Entities.ServerNode", b =>
+                {
+                    b.HasOne("Vanguard.ServerManager.Core.Entities.VanguardUser", "User")
+                        .WithOne("ServerNode")
+                        .HasForeignKey("Vanguard.ServerManager.Core.Entities.ServerNode", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 #pragma warning restore 612, 618
         }

@@ -81,7 +81,7 @@ namespace Vanguard.ServerManager.Node.Providers
                 return "anonymous";
             }
 
-            var credentials = await _credentialsProvider.GetCredentialsAsync<UsernamePasswordCredentials>(credentialsId);
+            var credentials = await _credentialsProvider.GetCredentialsAsync<UsernamePasswordCredentialsViewModel>(credentialsId);
             if (credentials == null)
             {
                 throw new Exception("Failed to retrieve steam credentials for provisioning");

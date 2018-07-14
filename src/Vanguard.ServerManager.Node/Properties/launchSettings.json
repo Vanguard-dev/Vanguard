@@ -2,7 +2,7 @@
   "profiles": {
     "Vanguard.ServerManager.Node": {
       "commandName": "Project",
-      "commandLineArgs": "install -a localhost:5000 -n test --no-ssl"
+      "commandLineArgs": "start -f"
     }
   }
 }

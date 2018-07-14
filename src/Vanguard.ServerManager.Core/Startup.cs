@@ -38,6 +38,11 @@ namespace Vanguard.ServerManager.Core
                 options.UseOpenIddict();
             });
 
+            services.AddDistributedRedisCache(options =>
+            {
+                options.Configuration = Configuration.GetConnectionString("RedisConnection");
+            });
+
             services.AddIdentity<VanguardUser, VanguardRole>(options =>
                 {
                     options.Password = new PasswordOptions
@@ -126,6 +131,7 @@ namespace Vanguard.ServerManager.Core
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/dist"; });
 
             services.AddTransient<ServerNodeService>();
+            services.AddSingleton<ServerNodeStatusService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

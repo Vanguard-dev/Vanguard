@@ -18,16 +18,23 @@ namespace Vanguard.ServerManager.Core
 
             builder.Entity<ServerNode>(entity =>
             {
-                entity.Property(t => t.PublicKey)
-                    .IsRequired();
-
                 entity.HasIndex(t => t.Name)
                     .IsUnique();
+
+                entity.HasOne(t => t.User)
+                    .WithOne(t => t.ServerNode)
+                    .HasForeignKey<ServerNode>(t => t.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.Property(t => t.PublicKey)
+                    .IsRequired();
             });
 
             builder.Entity<VanguardRole>().HasData(
                 new VanguardRole(RoleConstants.NodeAdmin) { NormalizedName = RoleConstants.NodeAdmin.ToUpper() },
-                new VanguardRole(RoleConstants.UserAdmin) { NormalizedName = RoleConstants.UserAdmin.ToUpper() }
+                new VanguardRole(RoleConstants.UserAdmin) { NormalizedName = RoleConstants.UserAdmin.ToUpper() },
+
+                new VanguardRole(RoleConstants.NodeAgent) { NormalizedName = RoleConstants.NodeAgent.ToUpper() }
             );
         }
     }

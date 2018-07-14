@@ -26,21 +26,21 @@ namespace Vanguard.ServerManager.Core.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
+                    AccessFailedCount = table.Column<int>(nullable: false),
+                    EmailConfirmed = table.Column<bool>(nullable: false),
+                    LockoutEnabled = table.Column<bool>(nullable: false),
+                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
+                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
+                    TwoFactorEnabled = table.Column<bool>(nullable: false),
                     Id = table.Column<string>(nullable: false),
                     UserName = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(maxLength: 256, nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedEmail = table.Column<string>(maxLength: 256, nullable: true),
-                    EmailConfirmed = table.Column<bool>(nullable: false),
                     PasswordHash = table.Column<string>(nullable: true),
                     SecurityStamp = table.Column<string>(nullable: true),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
-                    PhoneNumber = table.Column<string>(nullable: true),
-                    PhoneNumberConfirmed = table.Column<bool>(nullable: false),
-                    TwoFactorEnabled = table.Column<bool>(nullable: false),
-                    LockoutEnd = table.Column<DateTimeOffset>(nullable: true),
-                    LockoutEnabled = table.Column<bool>(nullable: false),
-                    AccessFailedCount = table.Column<int>(nullable: false)
+                    PhoneNumber = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
                 {
@@ -83,19 +83,6 @@ namespace Vanguard.ServerManager.Core.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_OpenIddictScopes", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "ServerNodes",
-                columns: table => new
-                {
-                    Id = table.Column<string>(nullable: false),
-                    Name = table.Column<string>(nullable: true),
-                    PublicKey = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ServerNodes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -205,6 +192,26 @@ namespace Vanguard.ServerManager.Core.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ServerNodes",
+                columns: table => new
+                {
+                    Id = table.Column<string>(nullable: false),
+                    Name = table.Column<string>(nullable: true),
+                    PublicKey = table.Column<string>(nullable: false),
+                    UserId = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ServerNodes", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ServerNodes_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "OpenIddictAuthorizations",
                 columns: table => new
                 {
@@ -265,12 +272,17 @@ namespace Vanguard.ServerManager.Core.Migrations
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[] { "dc5ef158-e5a4-4b7c-aa54-217133585351", "bd95f083-c297-4fa8-824f-c71cfd886d1a", "NodeAdmin", "NODEADMIN" });
+                values: new object[] { "baa42c1d-648c-423e-84f8-a9680473010f", "a093d86b-2d3f-4673-9eb3-275e71673c78", "NodeAdmin", "NODEADMIN" });
 
             migrationBuilder.InsertData(
                 table: "AspNetRoles",
                 columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
-                values: new object[] { "ee8256d1-9f37-40e8-8c57-0826047987d1", "b02e79c3-b11e-4732-a9fe-e518e848984e", "UserAdmin", "USERADMIN" });
+                values: new object[] { "67f3124c-b132-415f-871d-3c3ed0a1e9fa", "ef941296-2565-4f28-bb34-214370a0c6b1", "UserAdmin", "USERADMIN" });
+
+            migrationBuilder.InsertData(
+                table: "AspNetRoles",
+                columns: new[] { "Id", "ConcurrencyStamp", "Name", "NormalizedName" },
+                values: new object[] { "81d12ca9-4220-4711-b6b9-eca90f1b63a9", "742603b8-7dd0-46ea-aaa5-9e4d40d7fd8d", "NodeAgent", "NODEAGENT" });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -351,6 +363,13 @@ namespace Vanguard.ServerManager.Core.Migrations
                 column: "Name",
                 unique: true,
                 filter: "[Name] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ServerNodes_UserId",
+                table: "ServerNodes",
+                column: "UserId",
+                unique: true,
+                filter: "[UserId] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -383,10 +402,10 @@ namespace Vanguard.ServerManager.Core.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
+                name: "OpenIddictAuthorizations");
 
             migrationBuilder.DropTable(
-                name: "OpenIddictAuthorizations");
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "OpenIddictApplications");

@@ -13,5 +13,8 @@ namespace Vanguard.ServerManager.Core.Api
         [Required]
         [Display(Name = "PublicKey")]
         public string PublicKey { get; set; }
+
+        [Display(Name = "UserId")]
+        public string UserId { get; set; }
     }
 }

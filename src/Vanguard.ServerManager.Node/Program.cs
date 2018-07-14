@@ -11,12 +11,14 @@ using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using Vanguard.Daemon.Abstractions;
 using Vanguard.Daemon.Windows;
 using Vanguard.ServerManager.Core.Api;
 using Vanguard.ServerManager.Node.Abstractions;
+using Vanguard.ServerManager.Node.Abstractions.Windows;
 
 namespace Vanguard.ServerManager.Node
 {
@@ -25,6 +27,7 @@ namespace Vanguard.ServerManager.Node
         static void Main(string[] args)
         {
             var daemonHost = new DaemonHost()
+                .UseStartup<Startup>()
                 .UseService<Daemon>();
 
             var logger = daemonHost.Services.GetService<ILoggerFactory>().CreateLogger("Main");
@@ -45,7 +48,11 @@ namespace Vanguard.ServerManager.Node
                 {
                     try
                     {
-                        // TODO: Check if registration is already done
+                        if ((string)RegistryHelper.GetVanguardKey().GetValue("NodeInstalled") == "yes")
+                        {
+                            logger.LogInformation("The service has already been installed");
+                            return 0;
+                        }
 
                         var nodeName = nodeNameOption.HasValue() ? nodeNameOption.ParsedValue : Prompt.GetString("Name of the server manager node (Must be unique):");
                         var coreHostname = coreHostnameOption.HasValue() ? coreHostnameOption.ParsedValue : Prompt.GetString("Hostname or IP address of the server manager core server:");
@@ -102,6 +109,24 @@ namespace Vanguard.ServerManager.Node
                                 logger.LogError("Failed to register the node: [{0}] {1}", registrationResponse.StatusCode, await registrationResponse.Content.ReadAsStringAsync());
                                 return 1;
                             }
+
+                            var credentials = JsonConvert.DeserializeObject<UsernamePasswordCredentialsViewModel>(await registrationResponse.Content.ReadAsStringAsync());
+                            var localCredentialsProvider = daemonHost.Services.GetService<LocalCredentialsProvider>();
+                            try
+                            {
+                                await localCredentialsProvider.SetCredentialsAsync("CoreConnectionCredentials", credentials);
+                            }
+                            catch (CredentialProviderException ex)
+                            {
+                                // TODO: Implement recovery action via option flag to generate a new password
+                                logger.LogError("Failed to store retrieved credentials: {0}", ex);
+                                return 1;
+                            }
+
+                            RegistryHelper.GetVanguardKey().SetValue("NodeInstalled", "yes");
+                            RegistryHelper.GetVanguardKey().SetValue("CoreConnectionHostname", coreHostname);
+                            RegistryHelper.GetVanguardKey().SetValue("CoreConnectionNoSsl", useHttp.HasValue() ? "yes" : "no");
+                            RegistryHelper.GetVanguardKey().SetValue("CoreConnectionIgnoreSslWarnings", useInsecure.HasValue() ? "yes" : "no");
                         }
                     }
                     catch (Exception ex)
@@ -120,6 +145,13 @@ namespace Vanguard.ServerManager.Node
 
                 command.OnExecute(async () =>
                 {
+                    var nodeOptions = daemonHost.Services.GetService<NodeOptions>();
+                    if (!nodeOptions.IsInstalled)
+                    {
+                        logger.LogInformation("The service has already not been installed yet");
+                        return 1;
+                    }
+
                     try
                     {
                         if (foregroundSwitch.HasValue())
@@ -138,7 +170,10 @@ namespace Vanguard.ServerManager.Node
                     catch (Exception ex)
                     {
                         logger.LogError("Start failed due to an unexpected exception: {0}", ex);
+                        return 1;
                     }
+
+                    return 0;
                 });
             });
 
@@ -149,6 +184,7 @@ namespace Vanguard.ServerManager.Node
             else
             {
                 app.Execute(args);
+                Console.ReadKey();
             }
         }
     }

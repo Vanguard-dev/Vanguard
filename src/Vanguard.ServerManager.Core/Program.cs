@@ -42,10 +42,14 @@ namespace Vanguard.ServerManager.Core
                 command.OnExecute(async () =>
                 {
                     // TODO: Audit logging
+                    var userName = string.IsNullOrEmpty(emailArgument.Value)
+                        ? Prompt.GetString("Provide the user email address:")
+                        : emailArgument.Value;
+
                     var user = new VanguardUser
                     {
-                        UserName = emailArgument.Value,
-                        Email = emailArgument.Value
+                        UserName = userName,
+                        Email = userName
                     };
 
                     string password;
