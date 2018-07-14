@@ -161,7 +161,7 @@ export class IdentityService {
 
   async login(credentials: IdentityCredentials): Promise<IdentityActionResult> {
     try {
-      await this.fetchToken(credentials, 'password').pipe(
+      await this.fetchTokens(credentials, 'password').pipe(
         catchError(res => throwError(res)),
         tap(() => this.scheduleRefresh())
       ).toPromise();
@@ -190,7 +190,7 @@ export class IdentityService {
       first(),
       map(state => state.tokens),
       flatMap(token =>
-        this.fetchToken({ refresh_token: token.refresh_token }, 'refresh_token').pipe(
+        this.fetchTokens({ refresh_token: token.refresh_token }, 'refresh_token').pipe(
           catchError(() => throwError('Session expired'))
         )
       )
@@ -206,7 +206,7 @@ export class IdentityService {
     localStorage.removeItem(STORAGE_IDENTITY_TOKEN);
   }
 
-  private fetchToken(data: IdentityCredentials | IdentityRefreshGrant, grantType: string): Observable<any> {
+  private fetchTokens(data: IdentityCredentials | IdentityRefreshGrant, grantType: string): Observable<any> {
     const payload = Object.assign({}, data, { grant_type: grantType, scope: 'openid offline_access' });
     const params = new URLSearchParams();
     Object.keys(payload).forEach(key => params.append(key, payload[key]));

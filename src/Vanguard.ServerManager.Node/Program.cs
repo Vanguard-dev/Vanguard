@@ -1,24 +1,21 @@
 ﻿using System;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Win32;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using Vanguard.Daemon.Abstractions;
-using Vanguard.Daemon.Windows;
+using Vanguard.Extensions.Hosting;
 using Vanguard.ServerManager.Core.Api;
 using Vanguard.ServerManager.Node.Abstractions;
 using Vanguard.ServerManager.Node.Abstractions.Windows;
+using Vanguard.ServerManager.Node.Core;
 
 namespace Vanguard.ServerManager.Node
 {
@@ -26,11 +23,49 @@ namespace Vanguard.ServerManager.Node
     {
         static void Main(string[] args)
         {
-            var daemonHost = new DaemonHost()
-                .UseStartup<Startup>()
-                .UseService<Daemon>();
+            var host = new HostBuilder()
+                .ConfigureAppConfiguration((hostingContext, config) =>
+                {
+                    config.AddJsonFile("appsettings.json", true, true)
+                        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment}.json", true, true)
+                        .AddEnvironmentVariables("VANGUARD_")
+                        .AddCommandLine(args)
+                        .Build();
+                })
+                .ConfigureServices((hostingContext, services) =>
+                {
+                    NodeOptions nodeOptions;
+                    if ((string) RegistryHelper.GetVanguardKey().GetValue("NodeInstalled") == "yes")
+                    {
+                        nodeOptions = new NodeOptions
+                        {
+                            IsInstalled = true,
+                            CoreConnectionHostname = RegistryHelper.GetVanguardKey().GetValue("CoreConnectionHostname") as string,
+                            CoreConnectionNoSsl = (string) RegistryHelper.GetVanguardKey().GetValue("CoreConnectionNoSsl") == "yes",
+                            CoreConnectionIgnoreSslWarnings = (string) RegistryHelper.GetVanguardKey().GetValue("CoreConnectionIgnoreSslWarnings") == "yes"
+                        };
+                    }
+                    else
+                    {
+                        nodeOptions = new NodeOptions();
+                    }
+                    services.AddSingleton(nodeOptions);
 
-            var logger = daemonHost.Services.GetService<ILoggerFactory>().CreateLogger("Main");
+                    services.AddSingleton<LocalCredentialsProvider>();
+                    services.AddSingleton<Authenticator>();
+                    services.AddTransient<NodeHttpClient>();
+                    services.AddSingleton<IHostedService, AuthService>();
+                    services.AddSingleton<IHostedService, NodeService>();
+                })
+                .ConfigureLogging((hostingContext, logging) =>
+                {
+                    logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
+                    logging.AddConsole();
+                    logging.AddDebug();
+                }).Build();
+
+            var logger = host.Services.GetService<ILoggerFactory>().CreateLogger("Main");
+            var hostOptions = host.Services.GetService<NodeOptions>();
 
             var app = new CommandLineApplication { Name = "Vanguard Server Manager Node" };
             app.HelpOption("-?|-h|--help", true);
@@ -48,7 +83,7 @@ namespace Vanguard.ServerManager.Node
                 {
                     try
                     {
-                        if ((string)RegistryHelper.GetVanguardKey().GetValue("NodeInstalled") == "yes")
+                        if (hostOptions.IsInstalled)
                         {
                             logger.LogInformation("The service has already been installed");
                             return 0;
@@ -78,32 +113,34 @@ namespace Vanguard.ServerManager.Node
                             certificate = EncryptionHelpers.GenerateServerNodeCertificate(nodeName, password);
                         }
 
-                        using (var client = new HttpClient(new HttpClientHandler
+                        var nodeOptions = new NodeOptions
                         {
-                            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => useInsecure.HasValue() || new HttpClientHandler().ServerCertificateCustomValidationCallback(message, cert, chain, errors)
-                        }))
+                            CoreConnectionHostname = coreHostname,
+                            CoreConnectionNoSsl = useHttp.HasValue(),
+                            CoreConnectionIgnoreSslWarnings = useInsecure.HasValue()
+                        };
+                        var authenticator = new Authenticator(nodeOptions);
+                        try
                         {
-                            var apiRoot = $"{(useHttp.HasValue() ? "http" : "https")}://{coreHostname}";
-                            var authResponse = await client.PostAsync($"{apiRoot}/connect/token", new StringContent($"username={WebUtility.UrlEncode(coreUsername)}&password={WebUtility.UrlEncode(corePassword)}&grant_type=password&scope=openid+offline_access", Encoding.Default, "application/x-www-form-urlencoded"));
-                            if (!authResponse.IsSuccessStatusCode)
-                            {
-                                logger.LogError("Failed to register the node: [{0}] {1}", authResponse.StatusCode, await authResponse.Content.ReadAsStringAsync());
-                                return 1;
-                            }
-                            var bearerToken = JsonConvert.DeserializeObject<dynamic>(await authResponse.Content.ReadAsStringAsync()).access_token.Value;
+                            await authenticator.AuthenticateAsync(coreUsername, corePassword);
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError("Failed to authenticate for installation: {0}", ex);
+                            return 1;
+                        }
 
+                        using (var client = new NodeHttpClient(authenticator, nodeOptions))
+                        {
                             var registrationPayload = JsonConvert.SerializeObject(new ServerNodeViewModel
                             {
                                 Name = nodeName,
                                 PublicKey = certificate.GetPublicKeyString()
                             }, Formatting.None, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
-                            logger.LogDebug("Attempting to register the node. Payload: {0}", registrationPayload);
-                            var registrationResponse = await client.SendAsync(new HttpRequestMessage(HttpMethod.Post, $"{apiRoot}/api/node")
-                            {
-                                Method = HttpMethod.Post,
-                                Headers = { Authorization = new AuthenticationHeaderValue("Bearer", bearerToken) },
-                                Content = new StringContent(registrationPayload, Encoding.Default, "application/json")
-                            });
+                            logger.LogInformation("Starting node registration");
+                            logger.LogDebug("Attempting to register the node");
+                            logger.LogTrace(registrationPayload);
+                            var registrationResponse = await client.PostAsync($"{nodeOptions.ApiRoot}/api/node", new StringContent(registrationPayload, Encoding.Default, "application/json"));
                             if (!registrationResponse.IsSuccessStatusCode)
                             {
                                 logger.LogError("Failed to register the node: [{0}] {1}", registrationResponse.StatusCode, await registrationResponse.Content.ReadAsStringAsync());
@@ -111,7 +148,7 @@ namespace Vanguard.ServerManager.Node
                             }
 
                             var credentials = JsonConvert.DeserializeObject<UsernamePasswordCredentialsViewModel>(await registrationResponse.Content.ReadAsStringAsync());
-                            var localCredentialsProvider = daemonHost.Services.GetService<LocalCredentialsProvider>();
+                            var localCredentialsProvider = host.Services.GetService<LocalCredentialsProvider>();
                             try
                             {
                                 await localCredentialsProvider.SetCredentialsAsync("CoreConnectionCredentials", credentials);
@@ -145,10 +182,10 @@ namespace Vanguard.ServerManager.Node
 
                 command.OnExecute(async () =>
                 {
-                    var nodeOptions = daemonHost.Services.GetService<NodeOptions>();
+                    var nodeOptions = host.Services.GetService<NodeOptions>();
                     if (!nodeOptions.IsInstalled)
                     {
-                        logger.LogInformation("The service has already not been installed yet");
+                        logger.LogInformation("The service has not been installed yet");
                         return 1;
                     }
 
@@ -156,15 +193,11 @@ namespace Vanguard.ServerManager.Node
                     {
                         if (foregroundSwitch.HasValue())
                         {
-                            var cancellationTokenSource = new CancellationTokenSource();
-                            var workTask = daemonHost.RunAsync(cancellationTokenSource.Token);
-                            Console.ReadKey();
-                            cancellationTokenSource.Cancel();
-                            await workTask;
+                            await host.RunAsync();
                         }
                         else
                         {
-                            daemonHost.RunAsService();
+                            host.RunAsService();
                         }
                     }
                     catch (Exception ex)

@@ -3,14 +3,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Vanguard.Bot.Abstractions;
 using Vanguard.Bot.Discord;
-using Vanguard.Daemon.Abstractions;
 
 namespace Vanguard.Bot.WindowsService
 {
-    public class BotManager : IDaemon
+    public class BotService : IHostedService
     {
         private readonly CancellationTokenSource _cancellationTokenSource;
         private readonly ILoggerFactory _loggerFactory;
@@ -18,15 +18,15 @@ namespace Vanguard.Bot.WindowsService
         private readonly IConfiguration _configuration;
         private List<IBot> _bots;
 
-        public BotManager(ILoggerFactory loggerFactory, IConfiguration configuration)
+        public BotService(ILoggerFactory loggerFactory, IConfiguration configuration)
         {
             _cancellationTokenSource = new CancellationTokenSource();
             _loggerFactory = loggerFactory;
-            _logger = loggerFactory.CreateLogger<BotManager>();
+            _logger = loggerFactory.CreateLogger<BotService>();
             _configuration = configuration;
         }
 
-        public async Task RunAsync(CancellationToken cancellationToken = default)
+        public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Initializing");
             _bots = new List<IBot>();
@@ -44,15 +44,16 @@ namespace Vanguard.Bot.WindowsService
                 var discordBot = new DiscordBot(_loggerFactory, new DiscordSocketClient(), discordConfig);
                 _bots.Add(discordBot);
             }
-            
+
             _logger.LogInformation("Starting {0} bots", _bots.Count);
             _bots.ForEach(t => t.RunAsync(_cancellationTokenSource.Token));
             await Task.Delay(-1, _cancellationTokenSource.Token);
         }
 
-        public void Kill()
+        public Task StopAsync(CancellationToken cancellationToken)
         {
             _cancellationTokenSource.Cancel();
+            return Task.CompletedTask;
         }
     }
 }

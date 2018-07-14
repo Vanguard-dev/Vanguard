@@ -1,41 +1,38 @@
 ﻿using System.ServiceProcess;
-using System.Threading;
-using Vanguard.Daemon.Abstractions;
+using Microsoft.Extensions.Hosting;
 
-namespace Vanguard.Daemon.Windows
+namespace Vanguard.Extensions.Hosting
 {
-    public static class DaemonHostExtensions
+    public static class HostingExtensions
     {
-        public static void RunAsService(this DaemonHost host)
+        public static void RunAsService(this IHost host)
         {
             // TODO: Add support for systemd services
             ServiceBase.Run(new ServiceBase[]
             {
-                new WindowsService(host.Daemon)
+                new WindowsService(host)
             });
         }
 
         private class WindowsService : ServiceBase
         {
             private readonly System.ComponentModel.IContainer components;
-            private readonly IDaemon _daemon;
-            private CancellationTokenSource _cancellationTokenSource;
+            private readonly IHost _host;
 
-            public WindowsService(IDaemon daemon)
+            public WindowsService(IHost host)
             {
-                _daemon = daemon;
+                _host = host;
                 components = new System.ComponentModel.Container();
             }
 
             protected override void OnStart(string[] startArgs)
             {
-                _cancellationTokenSource = new CancellationTokenSource();
-                _daemon.RunAsync(_cancellationTokenSource.Token);
+                _host.Run();
             }
 
             protected override void OnStop()
             {
-                _cancellationTokenSource.Cancel();
+                _host.StopAsync().GetAwaiter().GetResult();
             }
 
             protected override void Dispose(bool disposing)
