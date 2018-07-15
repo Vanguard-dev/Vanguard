@@ -27,7 +27,7 @@ namespace Vanguard.Extensions.Hosting
 
             protected override void OnStart(string[] startArgs)
             {
-                _host.Run();
+                _host.StartAsync();
             }
 
             protected override void OnStop()

@@ -14,6 +14,8 @@ import {
 import { catchError, map, mergeMap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { ServerNode } from './reducer';
+import { HubListenerService } from '../hub-listener.service';
+import { IdentityService } from '../../identity/identity.service';
 
 @Injectable()
 export class ServerNodeEffects {
@@ -39,6 +41,16 @@ export class ServerNodeEffects {
   @Effect()
   init$: Observable<Action> = defer(() => of(new FetchServerNodes()));
 
-  constructor(private actions$: Actions, private http: HttpClient) {}
+  constructor(private actions$: Actions, private http: HttpClient, private identity: IdentityService,
+              private hubListener: HubListenerService) {
+    hubListener.registerHub('node', connection => {
+      connection.on('UpdateStatusList', statusList => {
+        console.log('statusList', statusList);
+      });
+      connection.on('StatusUpdated', statusUpdate => {
+        console.log('statusUpdate', statusUpdate);
+      });
+    });
+  }
 
 }

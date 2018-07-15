@@ -4,6 +4,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +43,7 @@ namespace Vanguard.ServerManager.Node
                         nodeOptions = new NodeOptions
                         {
                             IsInstalled = true,
+                            NodeName = RegistryHelper.GetVanguardKey().GetValue("NodeName") as string,
                             CoreConnectionHostname = RegistryHelper.GetVanguardKey().GetValue("CoreConnectionHostname") as string,
                             CoreConnectionNoSsl = (string) RegistryHelper.GetVanguardKey().GetValue("CoreConnectionNoSsl") == "yes",
                             CoreConnectionIgnoreSslWarnings = (string) RegistryHelper.GetVanguardKey().GetValue("CoreConnectionIgnoreSslWarnings") == "yes"
@@ -63,7 +66,9 @@ namespace Vanguard.ServerManager.Node
                     logging.AddConfiguration(hostingContext.Configuration.GetSection("Logging"));
                     logging.AddConsole();
                     logging.AddDebug();
-                }).Build();
+                })
+                .UseConsoleLifetime()
+                .Build();
 
             var logger = host.Services.GetService<ILoggerFactory>().CreateLogger("Main");
             var hostOptions = host.Services.GetService<NodeOptions>();
@@ -162,6 +167,7 @@ namespace Vanguard.ServerManager.Node
                             }
 
                             RegistryHelper.GetVanguardKey().SetValue("NodeInstalled", "yes");
+                            RegistryHelper.GetVanguardKey().SetValue("NodeName", nodeName);
                             RegistryHelper.GetVanguardKey().SetValue("CoreConnectionHostname", coreHostname);
                             RegistryHelper.GetVanguardKey().SetValue("CoreConnectionNoSsl", useHttp.HasValue() ? "yes" : "no");
                             RegistryHelper.GetVanguardKey().SetValue("CoreConnectionIgnoreSslWarnings", useInsecure.HasValue() ? "yes" : "no");
@@ -183,31 +189,53 @@ namespace Vanguard.ServerManager.Node
 
                 command.OnExecute(async () =>
                 {
-                    var nodeOptions = host.Services.GetService<NodeOptions>();
-                    if (!nodeOptions.IsInstalled)
+                    using (host)
                     {
-                        logger.LogInformation("The service has not been installed yet");
-                        return 1;
-                    }
-
-                    try
-                    {
-                        if (foregroundSwitch.HasValue())
+                        var nodeOptions = host.Services.GetService<NodeOptions>();
+                        if (!nodeOptions.IsInstalled)
                         {
-                            await host.RunAsync();
+                            logger.LogInformation("The service has not been installed yet");
+                            return 1;
                         }
-                        else
-                        {
-                            host.RunAsService();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        logger.LogError("Start failed due to an unexpected exception: {0}", ex);
-                        return 1;
-                    }
 
-                    return 0;
+                        try
+                        {
+                            if (foregroundSwitch.HasValue())
+                            {
+                                // TODO: Remove when child process kill has been fixed. See https://github.com/dotnet/cli/issues/7426
+                                var cancellationTokenSource = new CancellationTokenSource();
+                                AppDomain.CurrentDomain.ProcessExit += (sender, eventArgs) =>
+                                {
+                                    cancellationTokenSource.Cancel();
+                                };
+                                Console.CancelKeyPress += (sender, e) =>
+                                {
+                                    e.Cancel = true;
+                                    cancellationTokenSource.Cancel();
+                                };
+
+                                await host.StartAsync(cancellationTokenSource.Token);
+                                await host.WaitForShutdownAsync(cancellationTokenSource.Token);
+                                //await host.StartAsync();
+                                //await host.WaitForShutdownAsync();
+                            }
+                            else
+                            {
+                                host.RunAsService();
+                            }
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            return 0;
+                        }
+                        catch (Exception ex)
+                        {
+                            logger.LogError("Start failed due to an unexpected exception: {0}", ex);
+                            return 1;
+                        }
+
+                        return 0;
+                    }
                 });
             });
 
@@ -218,7 +246,6 @@ namespace Vanguard.ServerManager.Node
             else
             {
                 app.Execute(args);
-                Console.ReadKey();
             }
         }
     }

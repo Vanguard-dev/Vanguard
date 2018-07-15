@@ -98,6 +98,7 @@ export class IdentityService {
     localStorage.setItem(STORAGE_IDENTITY_TOKEN, JSON.stringify(token));
   }
 
+  ready$: BehaviorSubject<boolean> = new BehaviorSubject<boolean>(false);
   state$: Observable<IdentityState>;
   tokens$: Observable<IdentityToken>;
   profile$: Observable<IdentityProfile>;
@@ -138,7 +139,10 @@ export class IdentityService {
 
   init(): Observable<IdentityToken> {
     return this.startupRefresh().pipe(
-      tap(() => this.scheduleRefresh())
+      tap(() => {
+        this.scheduleRefresh();
+        this.ready$.next(true);
+      })
     );
   }
 
@@ -163,7 +167,10 @@ export class IdentityService {
     try {
       await this.fetchTokens(credentials, 'password').pipe(
         catchError(res => throwError(res)),
-        tap(() => this.scheduleRefresh())
+        tap(() => {
+          this.scheduleRefresh();
+          this.ready$.next(true);
+        })
       ).toPromise();
 
       return {

@@ -60,9 +60,8 @@ namespace Vanguard.ServerManager.Core.Controllers
                 return BadRequest(ModelState);
             }
             await _userManager.AddToRoleAsync(user, RoleConstants.NodeAgent);
-
-            model.UserId = user.Id;
-            var createResult = await _service.CreateAsync(model);
+            
+            var createResult = await _service.CreateAsync(model, user);
             if (!createResult.Succeeded)
             {
                 ModelState.AddEntityTransactionErrors(createResult.Errors);

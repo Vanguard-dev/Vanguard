@@ -42,15 +42,21 @@ namespace Vanguard.ServerManager.Core.Services
 
         public async Task<EntityTransactionResult<ServerNodeViewModel>> CreateAsync(ServerNodeViewModel input, CancellationToken cancellationToken = default)
         {
-            if (await AnyAsync(t => t.Name == input.Name, cancellationToken))
+            throw new NotSupportedException("You need to provide a related VanguardUser when creating a new ServerNode. Use the appropriate overload instead");
+        }
+
+        public async Task<EntityTransactionResult<ServerNodeViewModel>> CreateAsync(ServerNodeViewModel model, VanguardUser user, CancellationToken cancellationToken = default)
+        {
+            if (await AnyAsync(t => t.Name == model.Name, cancellationToken))
             {
-                return EntityTransactionResult<ServerNodeViewModel>.Failure(EntityTransactionError.CreateUniqueError("Name", input.Name));
+                return EntityTransactionResult<ServerNodeViewModel>.Failure(EntityTransactionError.CreateUniqueError("Name", model.Name));
             }
 
             var entity = new ServerNode
             {
-                Name = input.Name,
-                PublicKey = input.PublicKey
+                Name = model.Name,
+                PublicKey = model.PublicKey,
+                User = user
             };
 
             var result = await _context.ServerNodes.AddAsync(entity, cancellationToken);
@@ -78,7 +84,8 @@ namespace Vanguard.ServerManager.Core.Services
             {
                 Id = entity.Id,
                 Name = entity.Name,
-                PublicKey = entity.PublicKey
+                PublicKey = entity.PublicKey,
+                UserId = entity.UserId
             });
         }
     }

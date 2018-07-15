@@ -2,6 +2,7 @@ using System;
 using System.IdentityModel.Tokens.Jwt;
 using AspNet.Security.OpenIdConnect.Primitives;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -31,8 +32,19 @@ namespace Vanguard.ServerManager.Core
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddCors();
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .WithOrigins("http://localhost:5000")
+                        .AllowCredentials();
+                });
+            });
+
             services.AddSignalR();
+                //.AddMessagePackProtocol(); TODO: Fix js client global error and reenable afterwards
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
             services.AddDbContext<VanguardDbContext>(options =>
@@ -136,7 +148,7 @@ namespace Vanguard.ServerManager.Core
             services.AddSpaStaticFiles(configuration => { configuration.RootPath = "ClientApp/dist"; });
 
             services.AddTransient<ServerNodeService>();
-            services.AddSingleton<ServerNodeStatusService>();
+            services.AddTransient<ServerNodeStatusService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -154,12 +166,7 @@ namespace Vanguard.ServerManager.Core
 
             app.UseHttpsRedirection();
 
-            app.UseCors(builder =>
-            {
-                builder.WithOrigins("http://localhost:5055");
-                builder.AllowAnyHeader();
-                builder.AllowAnyMethod();
-            });
+            app.UseCors();
 
             app.UseStaticFiles();
             app.UseSpaStaticFiles();

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Vanguard.ServerManager.Core.Api;
 using Vanguard.ServerManager.Node.Core;
 
 namespace Vanguard.ServerManager.Node
@@ -16,10 +17,10 @@ namespace Vanguard.ServerManager.Node
 
         public NodeService(ILoggerFactory loggerFactory, Authenticator authenticator, NodeOptions options)
         {
-            _authenticator = authenticator;
-            _options = options;
             _cancellationTokenSource = new CancellationTokenSource();
             _logger = loggerFactory.CreateLogger<NodeService>();
+            _authenticator = authenticator;
+            _options = options;
         }
 
         public async Task StartAsync(CancellationToken providedCancellationToken)
@@ -35,7 +36,7 @@ namespace Vanguard.ServerManager.Node
             while (!_authenticator.IsAuthenticated)
             {
                 _logger.LogDebug("Waiting for authenticator to finish authenticating");
-                await Task.Delay(100, cancellationToken);
+                await Task.Delay(10000, cancellationToken);
             }
 
             var hubConnection = new HubConnectionBuilder()
@@ -44,6 +45,8 @@ namespace Vanguard.ServerManager.Node
                     options.AccessTokenProvider = () => Task.FromResult(_authenticator.AccessToken);
                 })
                 .Build();
+
+            // TODO: Start listening for node tasks
 
             await hubConnection.StartAsync(cancellationToken);
 
@@ -56,6 +59,7 @@ namespace Vanguard.ServerManager.Node
         public Task StopAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("Stopping NodeService");
+            _cancellationTokenSource.Cancel();
             return Task.CompletedTask;
         }
     }
