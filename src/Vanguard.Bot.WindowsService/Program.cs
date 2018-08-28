@@ -1,5 +1,5 @@
-﻿using Microsoft.Extensions.Hosting;
-using System;
+﻿using System;
+using Microsoft.Extensions.Hosting;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
@@ -16,9 +16,14 @@ namespace Vanguard.Bot.WindowsService
             var host = new HostBuilder()
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
-                    config.AddJsonFile("appsettings.json", true, true)
-                        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment}.json", true, true)
-                        .AddEnvironmentVariables("VANGUARD_")
+                    hostingContext.HostingEnvironment.EnvironmentName = Environment.GetEnvironmentVariable("VANGUARD_ENVIRONMENT");
+                    if (args.Any(t => t.StartsWith("/SetEnvironment:")))
+                    {
+                        hostingContext.HostingEnvironment.EnvironmentName = args.First(t => t.StartsWith("/SetEnvironment:")).Split(':')[1];
+                    }
+                    config.AddEnvironmentVariables("VANGUARD_")
+                        .AddJsonFile("appsettings.json", true, true)
+                        .AddJsonFile($"appsettings.{hostingContext.HostingEnvironment.EnvironmentName}.json", true, true)
                         .AddCommandLine(args)
                         .Build();
                 })

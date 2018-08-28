@@ -33,11 +33,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Remove="ClientApp\**" />
-    <None Remove="ClientApp\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Vanguard.ServerManager.Core.Api\Vanguard.ServerManager.Core.Api.csproj" />
   </ItemGroup>
 
